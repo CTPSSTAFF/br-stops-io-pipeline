@@ -1,0 +1,6 @@
+file_name,stop_id_columns
+stops.txt,stop_id
+facilities.txt,stop_id
+pathways.txt,"from_stop_id, to_stop_id"
+transfers.txt,"from_stop_id, to_stop_id"
+stop_times.txt,stop_id

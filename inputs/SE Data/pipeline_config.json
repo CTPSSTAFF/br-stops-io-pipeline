@@ -1,0 +1,184 @@
+{
+  "base_path": "C:/dev/br-stops_dev/boston-region-stops-input-pipeline/SE Data",
+  "shared_drive_path": "J:/Shared drives/TMD_TSA/Projects/STOPS/[Model Input Data]/SE Data",
+  "data_processing_runs": [
+    {
+      "run_mode": "2025AugRun",
+      "baseline_dbf_file": "{base_path}/Pipeline Input Data/STOPS SE Data/Baseline_STOPS_SE_Data/MPO1126TAZPopEmp.dbf",
+      "output_file": "{base_path}/Pipeline Output Data/2025AugRunData/MPO1126TAZPopEmp-2025AugRunData.dbf",
+      "join_key_master": "TAZ_ID",
+      "join_key_csv": "block_id",
+      "data_sets": [
+        {
+          "year": 2019,
+          "pop_col_name": "POP2019",
+          "emp_col_name": "EMP2019",
+          "sources": [
+            {
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2019/default_taz_data/tazleveldata_ma_population_run_113-209_2019_v20250829.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2019/default_taz_data/tazleveldata_ma_employment_run_113-209_2019_v20250829.csv",
+              "emp_value_col": "total_jobs"
+            },
+            {
+              "join_key_source": "block_id",
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_population_2020_v20230518.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_employment_2020_v20230518.csv",
+              "emp_value_col": "total_jobs"
+            }
+          ]
+        },
+        {
+          "year": 2024,
+          "pop_col_name": "POP2024",
+          "emp_col_name": "EMP2024",
+          "sources": [
+            {
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2024/default_taz_data/tazleveldata_ma_population_run_118-209_2024_v20250829.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2024/default_taz_data/tazleveldata_ma_employment_run_118-209_2024_v20250829.csv",
+              "emp_value_col": "total_jobs"
+            },
+            {
+              "join_key_source": "block_id",
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_population_2020_v20230518.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_employment_2020_v20230518.csv",
+              "emp_value_col": "total_jobs"
+            }
+          ]
+        },
+        {
+          "year": 2045,
+          "pop_col_name": "POP2045",
+          "emp_col_name": "EMP2045",
+          "sources": [
+            {
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2045/default_taz_data/tazleveldata_ma_population_run_117-210_2045_v20250829.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2045/default_taz_data/tazleveldata_ma_employment_run_117-210_2045_v20250829.csv",
+              "emp_value_col": "total_jobs"
+            },
+            {
+              "join_key_source": "block_id",
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_population_2050_v20230518.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_employment_2050_v20230518.csv",
+              "emp_value_col": "total_jobs"
+            }
+          ]
+        },
+        {
+          "year": 2050,
+          "pop_col_name": "POP2050",
+          "emp_col_name": "EMP2050",
+          "sources": [
+            {
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2050/default_taz_data/tazleveldata_ma_population_run_113-210_2050_v20250829.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2050/default_taz_data/tazleveldata_ma_employment_run_113-210_2050_v20250829.csv",
+              "emp_value_col": "total_jobs"
+            },
+            {
+              "join_key_source": "block_id",
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_population_2050_v20230518.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_employment_2050_v20230518.csv",
+              "emp_value_col": "total_jobs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run_mode": "2025AugRun_append_to_original",
+      "baseline_dbf_file": "{base_path}/Pipeline Input Data/STOPS SE Data/v0.1_STOPS_SE_Data/MPO1126TAZPopEmp.dbf",
+      "output_file": "{base_path}/Pipeline Output Data/MPO1126TAZPopEmp-2025AugRunData_Append_to_Original.dbf",
+      "join_key_master": "TAZ_ID",
+      "join_key_csv": "block_id",
+      "data_sets": [
+        {
+          "year": 2019,
+          "pop_col_name": "POP19v2",
+          "emp_col_name": "EMP19v2",
+          "sources": [
+            {
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2019/default_taz_data/tazleveldata_ma_population_run_113-209_2019_v20250829.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2019/default_taz_data/tazleveldata_ma_employment_run_113-209_2019_v20250829.csv",
+              "emp_value_col": "total_jobs"
+            },
+            {
+              "join_key_source": "block_id",
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_population_2020_v20230518.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_employment_2020_v20230518.csv",
+              "emp_value_col": "total_jobs"
+            }
+          ]
+        },
+        {
+          "year": 2024,
+          "pop_col_name": "POP24v2",
+          "emp_col_name": "EMP24v2",
+          "sources": [
+            {
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2024/default_taz_data/tazleveldata_ma_population_run_118-209_2024_v20250829.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2024/default_taz_data/tazleveldata_ma_employment_run_118-209_2024_v20250829.csv",
+              "emp_value_col": "total_jobs"
+            },
+            {
+              "join_key_source": "block_id",
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_population_2020_v20230518.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_employment_2020_v20230518.csv",
+              "emp_value_col": "total_jobs"
+            }
+          ]
+        },
+        {
+          "year": 2045,
+          "pop_col_name": "POP45v2",
+          "emp_col_name": "EMP45v2",
+          "sources": [
+            {
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2045/default_taz_data/tazleveldata_ma_population_run_117-210_2045_v20250829.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2045/default_taz_data/tazleveldata_ma_employment_run_117-210_2045_v20250829.csv",
+              "emp_value_col": "total_jobs"
+            },
+            {
+              "join_key_source": "block_id",
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_population_2050_v20230518.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_employment_2050_v20230518.csv",
+              "emp_value_col": "total_jobs"
+            }
+          ]
+        },
+        {
+          "year": 2050,
+          "pop_col_name": "POP50v2",
+          "emp_col_name": "EMP50v2",
+          "sources": [
+            {
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2050/default_taz_data/tazleveldata_ma_population_run_113-210_2050_v20250829.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/2025AugRun_BlockDataConversion/2025AugRun_SE_2050/default_taz_data/tazleveldata_ma_employment_run_113-210_2050_v20250829.csv",
+              "emp_value_col": "total_jobs"
+            },
+            {
+              "join_key_source": "block_id",
+              "pop_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_population_2050_v20230518.csv",
+              "pop_agg_method": "size",
+              "emp_csv": "{base_path}/Pipeline Input Data/UrbanSim TAZ SE Data/NHRI_Data/nhri_employment_2050_v20230518.csv",
+              "emp_value_col": "total_jobs"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

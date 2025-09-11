@@ -1,0 +1,31 @@
+{
+    "base_taz_pair_file": "STOPS_PATH_Auto_Skim__Original.csv",
+    "output_csv_path": "STOPS_PATH_Auto_Skim.csv",
+    "data_display_row_count": 5,
+    "omx_configs": [
+        {
+            "_DESCRIPTION": "Existing Scenario Data Update",
+            "omx_file_path": "TMD23.2_Skims_2019/hwy_am.omx",
+            "matrix_to_column_index": {
+                "dist": 2,
+                "da_time": 3
+            }
+        },
+        {
+            "_DESCRIPTION": "2045 Scenario Data Update",
+            "omx_file_path": "TMD23.2_Skims_2050/hwy_am.omx",
+            "matrix_to_column_index": {
+                "dist": 6,
+                "da_time": 7
+            }
+        },
+        {
+            "_DESCRIPTION": "2050 Scenario Data Update",
+            "omx_file_path": "TMD23.2_Skims_2050/hwy_am.omx",
+            "matrix_to_column_index": {
+                "dist": 8,
+                "da_time": 9
+            }
+        }
+    ]
+}
