@@ -1,5 +1,5 @@
 {
-    "base_taz_pair_file": "STOPS_PATH_Auto_Skim__Original.csv",
+    "base_taz_pair_file": "STOPS_PATH_Auto_Skim_Original.csv",
     "output_csv_path": "STOPS_PATH_Auto_Skim.csv",
     "data_display_row_count": 5,
     "omx_configs": [

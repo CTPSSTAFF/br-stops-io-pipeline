@@ -1,0 +1,9 @@
+service_id,service_name,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date
+c_71021_b_84134_d_9,Year Round Starting 6/29/25 (Route 23 Included) (MTh),1,0,0,1,0,0,0,20250629,20250831
+c_71021_b_84134_d_64,Year Round Starting 6/29/25 (Route 23 Included) (Sunday only),0,0,0,0,0,0,1,20250629,20250831
+c_71021_b_84134_d_32,Year Round Starting 6/29/25 (Route 23 Included) (Saturday only),0,0,0,0,0,1,0,20250629,20250831
+c_71021_b_84134_d_31,Year Round Starting 6/29/25 (Route 23 Included) (Weekday),1,1,1,1,1,0,0,20250629,20250831
+c_70995_b_84096_d_9,Year Round Starting 1/5/2025 (MTh),1,0,0,1,0,0,0,20240105,20250628
+c_70995_b_84096_d_64,Year Round Starting 1/5/2025 (Sunday only),0,0,0,0,0,0,1,20240105,20250628
+c_70995_b_84096_d_32,Year Round Starting 1/5/2025 (Saturday only),0,0,0,0,0,1,0,20240105,20250628
+c_70995_b_84096_d_31,Year Round Starting 1/5/2025 (Weekday),1,1,1,1,1,0,0,20240105,20250628

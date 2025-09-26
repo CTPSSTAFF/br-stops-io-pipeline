@@ -1,0 +1,2 @@
+agency_id,agency_url,agency_lang,agency_name,agency_phone,agency_timezone,agency_fare_url,tts_agency_name
+444,http://www.ridebat.com/,en,Brockton Area Transit Authority,508-588-1000,America/New_York,,

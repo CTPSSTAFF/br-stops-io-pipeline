@@ -1,0 +1,20 @@
+route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_color,route_text_color
+14,478a27db-1bf2-463e-9806-f038e89fc0ae,RT14,RT14,Route 14- Milford,3,DC143C,000000
+1,478a27db-1bf2-463e-9806-f038e89fc0ae,RT01,RT01,Woodland Green Line T,3,DC143C,000000
+7,478a27db-1bf2-463e-9806-f038e89fc0ae,RT07,RT07,,3,DC143C,000000
+3,478a27db-1bf2-463e-9806-f038e89fc0ae,RT03,RT03,Medical Center,3,DC143C,000000
+10,478a27db-1bf2-463e-9806-f038e89fc0ae,RT10,RT10,Route 10,3,DC143C,000000
+MBRS,478a27db-1bf2-463e-9806-f038e89fc0ae,Mass Bay Riverside Shuttle,Mass Bay Riverside Shuttle,Mass Bay Riverside Shuttle,3,DC143C,000000
+GL,478a27db-1bf2-463e-9806-f038e89fc0ae,Green Line Connector,Green Line Connector,Saturday Green Line Connector,3,800080,FFFFFF
+2,478a27db-1bf2-463e-9806-f038e89fc0ae,RT02,RT02,Natick Collection Shopper World Target Pinefield Nobscot Mass Bay Rose Kennedy L,3,DC143C,000000
+07C,478a27db-1bf2-463e-9806-f038e89fc0ae,RT07C,RT07C,,3,DC143C,000000
+04S,478a27db-1bf2-463e-9806-f038e89fc0ae,RT04S,RT04S,Central Hub Beaver Park Market Basket Concord Howard Streets Natick Mall Shopper,3,DC143C,000000
+6,478a27db-1bf2-463e-9806-f038e89fc0ae,RT06,RT06,Central Hub Framingham MBTA Station Ashland Holliston Milford,3,DC143C,000000
+MBCS,478a27db-1bf2-463e-9806-f038e89fc0ae,Mass Bay Campus to Campus Shuttle,Mass Bay Campus to Campus Shuttle,Mass Bay Campus to Campus Shuttle,3,DC143C,000000
+15,478a27db-1bf2-463e-9806-f038e89fc0ae,RT15,RT15,Route 15- Hudson,3,DC143C,000000
+11,478a27db-1bf2-463e-9806-f038e89fc0ae,RT11,RT11,Central Hub Sherwood Village Natick Collection Sherwood Plaza 9 27 Shopping Plaz,3,DC143C,000000
+04N,478a27db-1bf2-463e-9806-f038e89fc0ae,RT04N,RT04N,Waverly St Natick Mall Shoppers World MetroWest Medical,3,DC143C,000000
+MWES,478a27db-1bf2-463e-9806-f038e89fc0ae,MathWorks Express Shuttle,MathWorks Express Shuttle,MathWorks Express Shuttle,3,DC143C,000000
+NCS,478a27db-1bf2-463e-9806-f038e89fc0ae,Natick Commuter Shuttle,Natick Commuter Shuttle,Natick Commuter Shuttle,3,DC143C,000000
+5,478a27db-1bf2-463e-9806-f038e89fc0ae,RT05,RT05,Ashland Hopkinton,3,DC143C,000000
+9,478a27db-1bf2-463e-9806-f038e89fc0ae,RT09,RT09,Natick Mall 9 90 Corporate Center,3,DC143C,000000

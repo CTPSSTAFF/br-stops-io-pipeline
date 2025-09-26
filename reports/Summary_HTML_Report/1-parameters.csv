@@ -1,0 +1,21 @@
+Name,Value,Notes
+STOPSResultsFile,A2_MBTA-CATA-MWRTA-BATA-MVRTA#MBTA50-CATA-MWRTA-BATA-MVRTA#MBTA50-CATA-MWRTA-BATA-MVRTA_STOPSY2050Results.prn,STOPS results filename
+STOPSControlFile,Boston_2050.ctl,STOPS control filename
+STOPSStationSHPFile,STOPSStations.shp,STOPSStation SHP filename
+STOPSDistrictSHPFile,A2_DistrictZone.shp,STOPS District SHP filename
+HTMLTitle,Boston Regional STOPS Model 2050 Scenario,Title in HTML file chapter 1.0
+CalibFlag,TRUE,"Calibration flag...if T, do not process project specific tables; if F, process project specific tables"
+PMTtoVMT,1.15,Auto Occupancy factor for PMT to VMT conversion
+TopNumCorridor,10,number of districts that reflect the corridor; these usually are assigned district #s 1-n
+TopNumDistricts,10,number of districts to preserve in compressed trip table
+TopNumStations,10,number of stations to preserve in compressed trip table
+TopNumStationGroups,10,number of station groups in corridor
+TopNumFlag,2,"sort districts by project trips (using TopNumDistricts), 2=keep corridor district order (using TopNumCorridor)"
+ObservedXferRate,0,observed transfer rate; if INCREMENTAL set this to 0 as it will be calculated by reading in unlinked and linked tirp targets
+ObservedFGShare,0,observed share of FG trips; needs to be set regardless of STOPS mode
+ObservedFGOTrips,0,Fixed-Guideway-Only Trips from the Survey (cannot be gleaned from STOPS report in another way)
+ObservedFGBTrips,0,Fixed-Guideway+Bus Trips from the Survey (cannot be gleaned from STOPS report in another way)
+ObservedBusTrips,0,Bus-Only Trips from the Survey (cannot be gleaned from STOPS report in another way)
+ObservedWalkTrips,0,All Walk Transit Trips from the Survey (cannot be gleaned from STOPS report in another way)
+ObservedKNRTrips,0,All KNR Transit Trips from the Survey (cannot be gleaned from STOPS report in another way)
+ObservedPNRTrips,0,All PNR Transit Trips from the Survey (cannot be gleaned from STOPS report in another way)

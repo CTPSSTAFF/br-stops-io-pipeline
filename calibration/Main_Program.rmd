@@ -1,0 +1,145 @@
+---
+title: "Extract and Format Tables from STOPS report"
+author: "Naveen Chandra Iraganaboina"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list = ls())   ## Clear memory
+start_time <- Sys.time()
+
+print("!!-------------------Program Start------------------!!")
+
+library(dplyr) 
+library(data.table)
+library(foreign)
+library(iotools)
+library(janitor)
+library(openxlsx)
+library(stringr)
+library(zeallot)
+
+dir <- getwd()
+setwd(dir)
+
+source("Extract_STOPS_Tables.R")
+
+STOPS_prn <- "A2_MBTA-CATA-MWRTA-BATA-MVRTA#MBTA-CATA-MWRTA-BATA-MVRTA#MBTA-CATA-MWRTA-BATA-MVRTA_STOPSY2024Results.prn"
+Tables_to_extract <- "R1_Table_Numbers_Input.txt"
+Format_input_file <- "R2_Format_by_Table.xlsx"   
+Extracted_Tables <- paste0(dir,"/A1_Extracted_Tables.xlsx" )
+Formatted_Tables <- paste0(dir,"/A2_Formatted_Tables.xlsx" )
+
+print("!!-------------------Extracting Tables from STOPS Report file------------------!!")
+check <- Extract_Table(STOPS_Results_file = STOPS_prn, Tables_file = Tables_to_extract, 
+                       Format_input = Format_input_file, Output_Excel = Extracted_Tables)
+if(check){
+  print("!!-------------------Extracting Tables Successful: Tables are written to a workbook------------------!!")
+} else{
+  stop("ERROR: Table Extraction Failed")
+}
+
+#wb <- loadWorkbook(Formatted_Tables)
+wb <- createWorkbook()
+
+print("!!-------------------Formatting tables------------------!!")
+T_2.04 <- Get_2.04(Extracted_Tables)
+T_2.05 <- Get_2.05(Extracted_Tables)
+T_4.01 <- Get_4.01(Extracted_Tables)
+T_6.01 <- Get_6.01(Extracted_Tables)
+T_10.01 <- Get_10.01(Extracted_Tables)
+T_10.03 <- Get_10.03(Extracted_Tables)
+T_10.04 <- Get_10.04(Extracted_Tables)
+T_10.05 <- Get_10.05(Extracted_Tables)
+T_10.06 <- Get_10.06(Extracted_Tables)
+T_9.01 <- Get_9.01(Extracted_Tables)
+T_11.01 <- Get_11.01(Extracted_Tables)
+T_11.02 <- Get_11.02(Extracted_Tables)
+T_11.03 <- Get_11.03(Extracted_Tables)
+T_11.04 <- Get_11.04(Extracted_Tables)
+T_12.01 <- Get_12.01(Extracted_Tables)
+T_13.01 <- Get_13.01(Extracted_Tables)
+T_13.07 <- Get_13.07(Extracted_Tables)
+T_13.08 <- Get_13.08(Extracted_Tables)
+T_282.01 <- Get_282.01(Extracted_Tables)
+T_333.01 <- Get_333.01(Extracted_Tables)
+T_337.01 <- Get_337.01(Extracted_Tables)
+T_341.01 <- Get_341.01(Extracted_Tables)
+T_344.01 <- Get_344.01(Extracted_Tables)
+T_345.01 <- Get_345.01(Extracted_Tables)
+T_349.01 <- Get_349.01(Extracted_Tables)
+Other_Info <- Get_OtherInfo(STOPS_Results_file = STOPS_prn)
+print("!!-------------------Formatting Completed------------------!!")
+print("!!-------------------Dumping Formated tables to a workbook------------------!!")
+if(!("T_2.04" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_2.04") }
+if(!("T_2.05" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_2.05") }
+if(!("T_4.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_4.01") }
+if(!("T_6.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_6.01") }
+if(!("T_9.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_9.01") }
+if(!("T_10.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_10.01") }
+if(!("T_10.03" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_10.03") }
+if(!("T_10.04" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_10.04") }
+if(!("T_10.05" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_10.05") }
+#if(!("T_10.06" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_10.06") }
+if(!("T_11.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_11.01") }
+if(!("T_11.02" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_11.02") }
+if(!("T_11.03" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_11.03") }
+if(!("T_11.04" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_11.04") }
+if(!("T_12.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_12.01") }
+if(!("T_13.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_13.01") }
+if(!("T_13.07" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_13.07") }
+if(!("T_13.08" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_13.08") }
+if(!("T_282.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_282.01") }
+if(!("T_333.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_333.01") }
+if(!("T_337.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_337.01") }
+if(!("T_341.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_341.01") }
+if(!("T_344.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_344.01") }
+if(!("T_345.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_345.01") }
+if(!("T_349.01" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "T_349.01") }
+if(!("Other_Info" %in% sheets(wb))) { addWorksheet(wb = wb, sheetName = "Other_Info") }
+writeData(wb = wb, sheet = "T_2.04", x = T_2.04)
+writeData(wb = wb, sheet = "T_2.05", x = T_2.05)
+writeData(wb = wb, sheet = "T_4.01", x = T_4.01)
+writeData(wb = wb, sheet = "T_6.01", x = T_6.01)
+writeData(wb = wb, sheet = "T_9.01", x = T_9.01)
+writeData(wb = wb, sheet = "T_10.01", x = T_10.01)
+writeData(wb = wb, sheet = "T_10.03", x = T_10.03)
+writeData(wb = wb, sheet = "T_10.04", x = T_10.04)
+writeData(wb = wb, sheet = "T_10.05", x = T_10.05)
+# #writeData(wb = wb, sheet = "T_10.06", x = T_10.06)
+writeData(wb = wb, sheet = "T_11.01", x = T_11.01)
+writeData(wb = wb, sheet = "T_11.02", x = T_11.02)
+writeData(wb = wb, sheet = "T_11.03", x = T_11.03)
+writeData(wb = wb, sheet = "T_11.04", x = T_11.04)
+writeData(wb = wb, sheet = "T_12.01", x = T_12.01)
+writeData(wb = wb, sheet = "T_13.01", x = T_13.01)
+writeData(wb = wb, sheet = "T_13.07", x = T_13.07)
+writeData(wb = wb, sheet = "T_13.08", x = T_13.08)
+writeData(wb = wb, sheet = "T_282.01", x = T_282.01)
+writeData(wb = wb, sheet = "T_333.01", x = T_333.01)
+writeData(wb = wb, sheet = "T_337.01", x = T_337.01)
+writeData(wb = wb, sheet = "T_341.01", x = T_341.01)
+writeData(wb = wb, sheet = "T_344.01", x = T_344.01)
+writeData(wb = wb, sheet = "T_345.01", x = T_345.01)
+writeData(wb = wb, sheet = "T_349.01", x = T_349.01)
+writeData(wb = wb, sheet = "Other_Info", x = Other_Info)
+saveWorkbook(wb, Formatted_Tables , overwrite = TRUE)
+
+end_time <- Sys.time()
+diff_time <- difftime(end_time, start_time, units = "mins")
+outtext <- "Program Run Time was"
+if (as.numeric(diff_time,units = "secs") <= 600) { 
+  outtext <- paste(outtext,scales::comma(as.numeric(diff_time,units = "secs")),"seconds") 
+} else if (as.numeric(diff_time,units = "mins") <= 90) { 
+  outtext <- paste(outtext,scales::comma(as.numeric(diff_time,units = "mins")),"minutes") 
+} else { 
+  outtext <- paste(outtext,scales::comma(as.numeric(diff_time,units = "hours"),accuray = 0.01),"hours") 
+}
+cat(outtext,"\n")
+
+print("!!-------------------Program Completed------------------!!")
+
+
+```

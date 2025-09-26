@@ -1,0 +1,7 @@
+service_id,service_description
+c_24289_b_33923_d_32,Year Round starting 2/21/22 (Saturday only)
+c_24289_b_33923_d_31,Year Round starting 2/21/22 (Weekday)
+c_21058_b_28942_d_31,Beverly Commuter Pilot (Weekday)
+c_20558_b_78396_d_32,Mall Bus (Saturday only)
+c_17679_b_82828_d_64,"Rockport Shuttle (Memorial Day Weekend, June & September) (Sunday only)"
+c_17679_b_82828_d_32,"Rockport Shuttle (Memorial Day Weekend, June & September) (Saturday only)"

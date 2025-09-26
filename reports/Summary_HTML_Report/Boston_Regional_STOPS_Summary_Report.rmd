@@ -1,0 +1,3589 @@
+---
+output: 
+    rmdformats::readthedown:
+      toc_depth: 4
+      css: custom.css
+title: "Boston Regional STOPS Summary Report"
+author: |
+  ![](Boston_MPO_Logo.png){width=2in}   
+date: '`r format(Sys.time(), "%B-%d-%Y %H:%M")`'
+geometry: margin=1in
+fontfamily: helvetica
+fontsize: 11pt
+biblio-style: apsr
+knit:
+  (function(inputFile, encoding) { 
+    rmarkdown::render(inputFile, encoding = encoding, 
+    output_file = file.path(dirname(inputFile), 'BostonRegionalSTOPS_Summary.html'))})
+---
+
+```{r Setup,echo=FALSE, message=FALSE, warning=FALSE}
+
+# STOPS Report Master
+# Written by: David Schmitt
+# This program analyzes STOPS results reports, control files, and SHP files
+
+## 0.0 Setup
+rm(list=ls())   ## Clear memory
+
+#
+# List of Libraries
+library(dplyr)
+library(foreign)
+library(ggplot2)
+library(janitor)
+library(htmltools)  # for div in CTPP reactable
+library(kableExtra) # for colorful kable tables
+library(knitr)  # for kable, which makes decent tables
+library(leaflet) # maps
+library(measurements)
+library(reactable)
+library(reshape2) # for melt.matrix
+library(rgdal) # for SHP files
+library(rmdformats)
+library(rstudioapi)
+library(RColorBrewer)
+library(scales)
+library(tidyverse)
+
+library(RStudioConsoleRender)
+#
+## 0.3 Parameters & Constants
+
+# Default rates for STOPS v2.53
+DefaultHBW <- c(1.64,1.43,1.54)
+DefaultHBO <- c(6.58,5.65,6.04)
+DefaultNHB <- c(3.45,3.26,3.68)
+
+
+
+# Read in parameters
+if (file.exists("1-parameters.csv")) { parms <- read.csv("1-parameters.csv",header = TRUE, stringsAsFactors = FALSE)}
+
+STOPSResultsFile <- parms$Value[trimws(parms$Name) %in% "STOPSResultsFile"]
+if (!file.exists(STOPSResultsFile) & length(STOPSResultsFile)>1) { showPrompt("",paste(STOPSResultsFile,"does not exist!")) }
+STOPSControlFile <- parms$Value[trimws(parms$Name) %in% "STOPSControlFile"]
+if (!file.exists(STOPSControlFile) & length(STOPSControlFile)>1) { showPrompt("",paste(STOPSControlFile,"does not exist!")) }
+STOPSStationSHPFile <- parms$Value[trimws(parms$Name) %in% "STOPSStationSHPFile"]
+if (!file.exists(STOPSStationSHPFile) & length(STOPSStationSHPFile)>1) { showPrompt("",paste(STOPSStationSHPFile,"does not exist!")) }
+STOPSDistrictSHPFile <- parms$Value[trimws(parms$Name) %in% "STOPSDistrictSHPFile"]
+if (!file.exists(STOPSDistrictSHPFile) & length(STOPSDistrictSHPFile)>1) { showPrompt("",paste(STOPSDistrictSHPFile,"does not exist!")) }
+HTMLTitle <- parms$Value[trimws(parms$Name) %in% "HTMLTitle"]
+CalibFlag <- as.logical(parms$Value[trimws(parms$Name) %in% "CalibFlag"])
+PMTtoVMT <- as.numeric(parms$Value[trimws(parms$Name) %in% "PMTtoVMT"])
+TopNumCorridor <- as.numeric(parms$Value[trimws(parms$Name) %in% "TopNumCorridor"])
+TopNumDistricts <- as.numeric(parms$Value[trimws(parms$Name) %in% "TopNumDistricts"])
+TopNumStationGroups <- as.numeric(parms$Value[trimws(parms$Name) %in% "TopNumStationGroups"])
+TopNumStations <- as.numeric(parms$Value[trimws(parms$Name) %in% "TopNumStations"])
+TopNumFlag <- as.numeric(parms$Value[trimws(parms$Name) %in% "TopNumFlag"])
+ObservedXferRate <- as.numeric(parms$Value[trimws(parms$Name) %in% "ObservedXferRate"])
+ObservedFGShare <- as.numeric(parms$Value[trimws(parms$Name) %in% "ObservedFGShare"])
+ObservedFGOTrips <- as.numeric(parms$Value[trimws(parms$Name) %in% "ObservedFGOTrips"])
+ObservedFGBTrips <- as.numeric(parms$Value[trimws(parms$Name) %in% "ObservedFGBTrips"])
+ObservedBusTrips <- as.numeric(parms$Value[trimws(parms$Name) %in% "ObservedBusTrips"])
+ObservedWalkTrips <- as.numeric(parms$Value[trimws(parms$Name) %in% "ObservedWalkTrips"])
+ObservedKNRTrips <- as.numeric(parms$Value[trimws(parms$Name) %in% "ObservedKNRTrips"])
+ObservedPNRTrips <- as.numeric(parms$Value[trimws(parms$Name) %in% "ObservedPNRTrips"])
+
+# Observed Trips by FGO, Bus, and FGB (not available from STOPS output)
+# In order: FGO, FGB, Bus, All transit, FGO+FGB
+ObsSurvey1 <- c(ObservedFGOTrips, ObservedFGBTrips, ObservedBusTrips,
+                ObservedFGOTrips + ObservedFGBTrips + ObservedBusTrips,
+                ObservedFGOTrips + ObservedFGBTrips)
+
+
+# Observed Trips by access mode 
+# Walk, KNR, PNR
+ObsSurvey2 <- c(ObservedWalkTrips, ObservedKNRTrips, ObservedPNRTrips)
+
+
+# Read in key routes
+if (file.exists("2-keyroutes.csv")) { KeyRoutes <- read.csv("2-keyroutes.csv",header = TRUE, stringsAsFactors = FALSE)}
+
+# Read in key stops/stations
+if (file.exists("3-keystations.csv")) { KeyStops <- read.csv("3-keystations.csv",header = TRUE, stringsAsFactors = FALSE)}
+
+
+#
+## 0.4 List of Functions
+#
+
+# SORTLIST FUNCTION
+# provides descending order of row/column totals; used in ORGANIZEMAT function
+# Mati - input matrix
+# flag = 1 for row sort list, 2 for column sort list
+SortList <- function(mati,flag,npar=TRUE) {   
+  if ((flag != 1) & (flag != 2)) {
+    
+    rsl <- c(seq(1,nrow(mati))) 
+    names(rsl) <- rownames(mati)
+    csl <- c(seq(1,ncol(mati)))
+    names(csl) <- colnames(mati)
+    
+  } else {
+    
+    #
+    # First, add sequence row & column ID
+    mati.2 <- rbind(mati, seq(1:ncol(mati)))
+    rownames(mati.2)[nrow(mati.2)] <- "Sequence"
+    mati.2 <- cbind(mati.2, seq(1:ncol(mati)))
+    colnames(mati.2)[ncol(mati.2)] <- "Sequence"
+
+    #
+    # Sort rows and columns by total rows/columns
+    mati.3 <- mati.2[order(-mati.2[,"Total"]),]  # sort by Total column
+    mati.4 <- mati.3[,order(-mati.3["Total",])]  # sort by Total row
+
+    #
+    # Get ordered rows & columns....remove Sequence row/column...add Total row/column
+    rsl <- mati.4["Sequence", 2:ncol(mati.4)]
+    rsl <- rsl[!names(rsl) %in% c("Sequence")]
+
+    csl <- mati.4[2:nrow(mati.4), "Sequence"]
+    csl <- csl[!names(csl) %in% c("Sequence")]
+
+  }
+  
+  if (flag == 1) {
+    return(rsl)  
+  } else {
+    return(csl)
+  }
+  
+}
+
+#
+# ORGANIZEMAT FUNCTION
+# Condenses matrix to individual # rows/columns and totals the remaining row/columns
+# Parameters:
+#. MATI - input matrix (must be a matrix)
+#. RSL - desired order of rows 
+#. CSL - desired order of columns
+#. TOPDIST - number of rows/columns to preserve, trim or aggregate the rest (preserves row/col 1 through TOPDIST, trims/aggregates TOPDIST+1 to n row/cols)
+OrganizeMat <- function(mati,rsl,csl,topdist,npar=TRUE) {   
+  if (!npar) {
+    
+    mato <- mati
+  } else {
+
+    #
+    # Sort rows/columns using row/col sort lists
+    mati.5 <- mati[c(csl),c(rsl)]
+
+    #
+    # Aggregate Other rows
+    for (i in 1:nrow(mati.5)) {
+      for (j in 1:ncol(mati.5)) {
+        if ( (i > (topdist+1)) & (j <= (topdist+1)) ) {
+          mati.5[(topdist+1),j] = mati.5[(topdist+1),j] + mati.5[i,j]
+        } else if ( (i <= (topdist+1)) & (j > (topdist+1)) ) {
+          mati.5[i,(topdist+1)] = mati.5[i,(topdist+1)] + mati.5[i,j]
+        } else if ( (i > (topdist+1)) & (j > (topdist+1)) ) {
+          mati.5[(topdist+1),(topdist+1)] = mati.5[(topdist+1),(topdist+1)] + mati.5[i,j]
+        }
+      }
+    }
+  }
+  
+  #
+  # Remove rows below Other row
+  mati.5 <- mati.5[-c((topdist+2):nrow(mati.5)),]
+  rownames(mati.5)[nrow(mati.5)] <- "Other"
+
+  #
+  # Remove cols to the right of Other col
+  mati.5 <- mati.5[,-c((topdist+2):ncol(mati.5))]
+  colnames(mati.5)[ncol(mati.5)] <- "Other"
+
+  #
+  # Add row and column totals
+  mati.5 <- addmargins(mati.5, FUN = list(Total = sum), quiet = TRUE)
+  mato <- mati.5
+
+  return(mato)
+  
+}
+
+#
+# ORGANIZEMAT2 FUNCTION
+# Condenses matrix to individual # rows/columns and totals the remaining row/columns
+# Parameters:
+#. MATI - input matrix (must be a matrix)
+#. RSL - desired order of rows 
+#. CSL - desired order of columns
+#. TOPDIST - number of rows/columns to preserve, trim or aggregate the rest (preserves row/col 1 through TOPDIST, trims/aggregates TOPDIST+1 to n row/cols)
+#. TRIM - if TRUE, will trim rows/columns that exceed TOPDIST; if FALSE, aggregate those rows/cols into single row/col named 'Other'
+#. TOTALS - if TRUE, compute row/col totals; if FALSE, do not compute row/col totals 
+OrganizeMat2 <- function(mati,rsl,csl,topdist,trim=FALSE,totals=TRUE,npar=TRUE) {   
+  
+  if (!npar) {
+    
+    # If all parameters have not been provided, return original matrix
+    mato <- mati
+    
+  } else {
+    
+    #
+    # Sort rows/columns using row/col sort lists
+    mati.5 <- mati[c(csl),c(rsl)]
+		
+    if (trim) {
+			#
+			# Trim table to first topdist rows/cols
+		  mati.5 <- mati.5[1:topdist,]
+		  mati.5 <- mati.5[,1:topdist]
+		  
+		} else {
+		
+    	#
+    	# Aggregate Other rows
+    	for (i in 1:nrow(mati.5)) {
+      	for (j in 1:ncol(mati.5)) {
+        	if ( (i > (topdist+1)) & (j <= (topdist+1)) ) {
+          	mati.5[(topdist+1),j] = mati.5[(topdist+1),j] + mati.5[i,j]
+        	} else if ( (i <= (topdist+1)) & (j > (topdist+1)) ) {
+          	mati.5[i,(topdist+1)] = mati.5[i,(topdist+1)] + mati.5[i,j]
+        	} else if ( (i > (topdist+1)) & (j > (topdist+1)) ) {
+          	mati.5[(topdist+1),(topdist+1)] = mati.5[(topdist+1),(topdist+1)] + mati.5[i,j]
+       	 	}
+      	}
+    	}
+ 
+  		#
+  		# Remove rows below Other row
+  		mati.5 <- mati.5[-c((topdist+2):nrow(mati.5)),]
+  		rownames(mati.5)[nrow(mati.5)] <- "Other"
+
+  		#
+  		# Remove cols to the right of Other col
+  		mati.5 <- mati.5[,-c((topdist+2):ncol(mati.5))]
+  		colnames(mati.5)[ncol(mati.5)] <- "Other"
+
+  	}
+  
+ 
+ 		if (totals) {
+ 		
+ 			#
+  		# Add row and column totals
+  		mati.5 <- addmargins(mati.5, FUN = list(Total = sum), quiet = TRUE)
+  		mato <- mati.5
+
+ 		} else {
+ 		
+ 			#
+ 			# No row/col totals
+ 			mato <- mati.5
+ 		
+ 		}
+ 		
+		return(mato)
+
+	}
+}
+
+#
+# READDISTRICT - Read in district-to-district table function
+ReadDistrict <- function(con,District,skiplines,start,width) { # file connection, District dataframe, # lines to skip, start column #, # columns width for each cell
+  out <- matrix(, nrow=nrow(District), ncol=nrow(District))
+  rownames(out) <- District$Label
+  colnames(out) <- District$Label
+  line = readLines(con, n=skiplines)
+  for (i in 1:nrow(District)) {
+    line = readLines(con, n=1)
+    for (j in seq(start,((nrow(District)-1)*width+start),width)) {
+      k = ((j - start) / width) + 1
+      out[i,k] = as.numeric(substr(line,j,j+width))
+    }
+  }
+  return(out)
+}
+#
+# READMOBBENDISTRICT - Read in district-to-district table function for Table series 1032; WAW uses different formatting for these tables
+ReadMobBenDistrict <- function(con,District,skiplines,start,width) { # file connection, District dataframe, # lines to skip, start column #, # columns width for each cell
+  
+  # Setup output matrix
+  out <- matrix(, nrow=nrow(District), ncol=nrow(District))
+  rownames(out) <- District$Label
+  colnames(out) <- District$Label
+  line = readLines(con, n=skiplines)
+
+  while (TRUE) {
+  
+    # Read single line
+    line = readLines(con, n=1)
+    # print(substr(line,1,10))
+    i = 0
+    tmp <- vector()
+    while (regexpr("Total",line)<=0) {
+      i = i + 1
+      tmp[i] <- line
+      line = readLines(con, n=1)
+    }
+  
+    # Get vector of districts in Pdist
+    pdist <- as.numeric(substr(tmp,1,5))
+    # print(cat("\n\n",length(pdist),"\n",pdist))
+    
+    # Read in array into out matrix
+    for (i in 1:length(tmp)) {
+      for (j in seq(6,(length(pdist)*14+6),14)) {
+        k = ((j - 6) / 14) + 1
+        if (k <= max(pdist)) {
+          m = as.numeric(substr(tmp[i],1,5))
+          out[pdist[m],pdist[k]] = as.numeric(substr(tmp[i],j,j+14))
+        }
+      }
+    }
+    break
+      
+  }
+  # Replace NAs with zeros
+  out[is.na(out)] = 0
+  return(out)
+}
+
+
+
+#
+# READSTATION - Read in station-to-station table function
+ReadStation <- function(con,Station,skiplines,start,width) { # file connection, Station dataframe, # lines to skip, start column #, # columns width for each cell
+  out <- matrix(, nrow=nrow(Station), ncol=nrow(Station))
+  rownames(out) <- Station$Label
+  colnames(out) <- Station$Label
+  line = readLines(con, n=skiplines)
+  for (i in 1:nrow(Station)) {
+    line = readLines(con, n=1)
+    for (j in seq(start,((nrow(Station)-1)*width+start),width)) {
+      k = ((j - start) / width) + 1
+      out[i,k] = as.numeric(substr(line,j,j+(width-1)))
+    }
+  }
+  return(out)
+}
+
+#
+# WRITEMATRIX
+WriteMatrix <- function(mat,flag,label) {  # flag 1=comma, 2=percent
+  if (flag == 1) {
+    mat[is.nan(mat)] <- 0
+    mat[is.infinite(mat)] <- 0
+    mat2 <- mat
+    mat2[] <- apply(mat, 2, function(x) comma(x, trim=FALSE, accuracy=2))
+    
+  } else if (flag == 2) {
+    mat[is.nan(mat)] <- 0
+    mat[is.infinite(mat)] <- 0
+    mat2 <- mat
+    mat2[] <- apply(mat, 2, function(x) percent(x, trim=FALSE, accuracy=2))
+  }
+  kable(mat2, col.names = colnames(mat2),
+      align=c(rep('r',ncol(mat2))),
+      digits=c(rep(2,ncol(mat2))),
+      caption = paste0(label),
+      row.names= TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+}
+
+```
+
+
+```{r ReadControlFile,echo=FALSE, message=FALSE, warning=FALSE}
+
+## 0.8 Read Control File
+
+
+# List of empty dataframes
+WalkConType <- NULL
+gtfs_rows   <- list()
+
+# Open connection to STOPS control file
+con <- file(STOPSControlFile, "r")
+while (TRUE) {
+  line <- readLines(con, n = 1)
+  if (length(line) == 0) break
+
+  if (grepl("WALKCONTYPE", line)) {
+    WalkConType <- substr(line, 13, 14)
+
+  } else if (grepl("GTFFileDataPrefix", line)) {
+    # parse the prefix line
+    num   <- as.numeric(gsub(".*\\((.*)\\).*", "\\1", line))
+    prefx <- trimws(substr(line, regexpr("=", line) + 1, nchar(line)))
+    # skip the suffix line
+    readLines(con, n = 1)
+    # read the date line
+    dat_line <- readLines(con, n = 1)
+    dat      <- trimws(substr(dat_line, regexpr("=", dat_line) + 1, nchar(dat_line)))
+
+    # store as one row in a list
+    gtfs_rows[[length(gtfs_rows) + 1]] <- data.frame(
+      Number       = num,
+      Location     = prefx,
+      CalendarDate = as.Date(dat, "%Y%m%d"),
+      CalendarDay  = weekdays(as.Date(dat, "%Y%m%d")),
+      stringsAsFactors = FALSE
+    )
+  }
+}
+close(con)
+
+# Combine all GTFS rows at once
+GTFS <- dplyr::bind_rows(gtfs_rows) %>%
+  dplyr::filter(Location != "") %>%
+  dplyr::mutate(
+    Alternative = dplyr::case_when(
+      Number %in% c(1:4,13:16,25:28,37:40,49:52) ~ "1-Existing",
+      Number %in% c(5:8,17:20,29:32,41:44,53:56) ~ "2-No Build",
+      TRUE                                      ~ "3-Build"
+    )
+  ) %>%
+  dplyr::select(Alternative, Number, Location, CalendarDate, CalendarDay) %>%
+  dplyr::arrange(Alternative)
+
+```
+
+
+```{r ReadforDiagonistics,echo=FALSE, message=FALSE, warning=FALSE}
+
+## 0.9 Read Current Year File for Calibration & Diagnostic Information
+
+
+#
+# Open connection to STOPS output file
+con <- file(STOPSResultsFile, "r")
+
+#
+# List of Diagnostics & Calibration-related Constants 
+AdjustFactor <- 0
+AutoTimeFactor <- 0
+BaseYear <- 0
+BoardingPen <- 0
+BuildYear <- 0
+CTPPCalibration <- ""
+CTPPGeography <- ""
+FGS.Project <- 0
+FGS.Other <- 0
+GroupCalibration <- ""
+KNRTransit <- 0
+Modeled.Linked <- 0
+Modeled.Unlinked <- 0
+Modeled.XferRate <- 0
+NoBuildYear <- 0
+NumDistricts <- 0
+PNRBus <- 0
+PNRTransit <- 0
+RawBoardings <- 0
+RegCalib <- 0
+RouteBoardings <- 0
+RunDate <- ""
+RunName <- ""
+StationBoardings <- 0
+STOPSMode <- ""
+STOPSVersion <- ""
+TargetBoardings <- 0
+UnlinkLinkRatio <- 0
+WalkWeight <- 0
+
+#
+#Prepare lists for all tables that were grown with rbind()
+district_list          <- list()
+stopdata_list          <- list()
+stationgroup_list      <- list()
+station_list           <- list()
+stopboarding_list      <- list()
+routeboarding_list     <- list()
+routebystop_list       <- list()
+stopgroupboarding_list <- list()
+routebyaccess_list     <- list()
+routexfers_list        <- list()
+sedata_list            <- list()
+
+#
+# List of empty dataframes
+District <- data.frame(
+  Number = numeric(),
+  Label = character(),
+  AllModePA = numeric(),
+  stringsAsFactors = FALSE
+)
+
+LinkedTrips <- data.frame(
+  Label = c("HBW 0-car", "HBW 1-car", "HBW 2+car", "HBW subtotal",
+            "HBO 0-car", "HBO 1-car", "HBO 2+car", "HBO subtotal",
+            "NHB 0-car", "NHB 1-car", "NHB 2+car", "NHB subtotal",
+            "Total"),
+  Trips = 1:13,
+  stringsAsFactors=FALSE
+)
+
+Route.pk <- data.frame(
+  ID = character(),
+  Name = character(),
+  ExTrips = numeric(),
+  ExMiles = numeric(),
+  ExHours = numeric(),
+  NBTrips = numeric(),
+  NBMiles = numeric(),
+  NBHours = numeric(),
+  BTrips = numeric(),
+  BMiles = numeric(),
+  BHours = numeric(),
+  stringsAsFactors = FALSE
+)
+Route.op <- Route.pk
+
+SEData <- data.frame(
+  District = character(),
+  CTPPWorker = numeric(),
+  CTPPEmployment = numeric(),
+  CTPPPop = numeric(),
+  CTPPEmp = numeric(),
+  ExPop = numeric(),
+  NBPop = numeric(),
+  BPop = numeric(),
+  ExEmp = numeric(),
+  NBEmp = numeric(),
+  BEmp = numeric(),
+  stringsAsFactors = FALSE
+)
+
+RouteBoarding <- data.frame(
+  ID = character(),
+  Name = character(),
+  Count = numeric(),
+  ExistWalk = numeric(),
+  ExistKNR = numeric(),
+  ExistPNR = numeric(),
+  ExistTotal = numeric(),
+  ExistDelta = numeric(),
+  NoBuildWalk = numeric(),
+  NoBuildKNR = numeric(),
+  NoBuildPNR = numeric(),
+  NoBuildTotal = numeric(),
+  NoBuildDelta = numeric(),
+  BuildWalk = numeric(),
+  BuildKNR = numeric(),
+  BuildPNR = numeric(),
+  BuildTotal = numeric(),
+  BuildDelta = numeric(),
+  stringsAsFactors = FALSE
+)
+
+RouteByStop <- data.frame(
+  ID = character(),
+  Route = character(),
+  StopGroup = character(),
+  Count = numeric(),
+  ExistWalk = numeric(),
+  ExistKNR = numeric(),
+  ExistPNR = numeric(),
+  ExistTotal = numeric(),
+  ExistDeltaT = numeric(),
+  NoBuildWalk = numeric(),
+  NoBuildKNR = numeric(),
+  NoBuildPNR = numeric(),
+  NoBuildTotal = numeric(),
+  NoBuildDeltaW = numeric(),
+  NoBuildDeltaK = numeric(),
+  NoBuildDeltaP = numeric(),
+  NoBuildDeltaT = numeric(),
+  BuildWalk = numeric(),
+  BuildKNR = numeric(),
+  BuildPNR = numeric(),
+  BuildTotal = numeric(),
+  BuildDeltaW = numeric(),
+  BuildDeltaK = numeric(),
+  BuildDeltaP = numeric(),
+  BuildDeltaT = numeric(),
+  stringsAsFactors = FALSE
+)
+
+RouteByAccess <- data.frame(
+  ID = character(),
+  Route = character(),
+  Count = numeric(),
+  ExistWalk = numeric(),
+  ExistKNR = numeric(),
+  ExistPNR = numeric(),
+  ExistXfer = numeric(),
+  ExistTotal = numeric(),
+  ExistDelta = numeric(),
+  NoBuildWalk = numeric(),
+  NoBuildKNR = numeric(),
+  NoBuildPNR = numeric(),
+  NoBuildXfer = numeric(),
+  NoBuildDelta = numeric(),
+  BuildWalk = numeric(),
+  BuildKNR = numeric(),
+  BuildPNR = numeric(),
+  BuildXfer = numeric(),
+  BuildTotal = numeric(),
+  BuildDelta = numeric(),
+  stringsAsFactors = FALSE
+)
+
+RouteXfers <- data.frame(
+  ID = character(),
+  Route = character(),
+  ExistID = character(),
+  ExistRoute = character(),
+  ExistXfer = numeric(),
+  NoBuildID = character(),
+  NoBuildRoute = character(),
+  NoBuildXfer = numeric(),
+  BuildID = character(),
+  BuildRoute = character(),
+  BuildXfer = numeric(),
+  stringsAsFactors = FALSE
+)
+
+StopGroupBoarding <- data.frame(
+  StopGroup = character(),
+  Count = numeric(),
+  ExistWalk = numeric(),
+  ExistKNR = numeric(),
+  ExistPNR = numeric(),
+  ExistTotal = numeric(),
+  ExistDeltaT = numeric(),
+  NoBuildWalk = numeric(),
+  NoBuildKNR = numeric(),
+  NoBuildPNR = numeric(),
+  NoBuildTotal = numeric(),
+  NoBuildDeltaW = numeric(),
+  NoBuildDeltaK = numeric(),
+  NoBuildDeltaP = numeric(),
+  NoBuildDeltaT = numeric(),
+  BuildWalk = numeric(),
+  BuildKNR = numeric(),
+  BuildPNR = numeric(),
+  BuildTotal = numeric(),
+  BuildDeltaW = numeric(),
+  BuildDeltaK = numeric(),
+  BuildDeltaP = numeric(),
+  BuildDeltaT = numeric(),
+  stringsAsFactors = FALSE
+)
+
+StopData <- data.frame(
+  ID = character(),
+  Name = character(),
+  Code = character(),
+  Group = character(),
+  Type = numeric(),
+  NewExisting = character(),
+  Count = numeric(),
+  WalkPen = numeric(),
+  KNRPen = numeric(),
+  PNRPen = numeric(),
+  SamePen = numeric(),
+  DiffPen = numeric(),
+  stringsAsFactors = FALSE
+)
+
+StopBoarding <- data.frame(
+  ID = character(),
+  Name = character(),
+  ExistWalk = numeric(),
+  ExistKNR = numeric(),
+  ExistPNR = numeric(),
+  ExistTotal = numeric(),
+  ExistXfer = numeric(),
+  ExistDelta = numeric(),
+  NoBuildWalk = numeric(),
+  NoBuildKNR = numeric(),
+  NoBuildPNR = numeric(),
+  NoBuildXfer = numeric(),
+  NoBuildDelta = numeric(),
+  BuildWalk = numeric(),
+  BuildKNR = numeric(),
+  BuildPNR = numeric(),
+  BuildXfer = numeric(),
+  BuildTotal = numeric(),
+  BuildDelta = numeric(),
+  stringsAsFactors = FALSE
+)
+
+Station <- data.frame(
+  Number = numeric(),
+  Label = character(),
+  stringsAsFactors = FALSE
+)
+
+StationGroup <- data.frame(
+  Number = numeric(),
+  Label = character(),
+  stringsAsFactors = FALSE
+)
+
+TripBreakdown <- data.frame(
+	Purpose = c(rep("HBW",80),rep("HBO",80),rep("NHB",80),rep("Total",80)),
+	AutoOwn = rep(c(rep("0-car HH",20),rep("1-car HH",20),rep("2+-car HH",20),rep("All HH",20)),4),
+	Submode = rep(c(rep("Fixed Guideway Only",4),rep("Fixed Guideway+Bus",4),rep("Bus Only",4),rep("All Transit",4),rep("All Fixed Guideway",4)),16),
+	Access = rep(c("Walk","KNR","PNR","All Access"),80),
+	ExistModel = c(rep(0,320)),
+	ExistSurvey = c(rep(0,320)),
+	ExistDelta = c(rep(0,320)),
+	NoBuildModel = c(rep(0,320)),
+	NoBuildSurvey = c(rep(0,320)),
+	NoBuildDelta = c(rep(0,320)),
+	BuildModel = c(rep(0,320)),
+	BuildSurvey = c(rep(0,320)),
+	BuildDelta = c(rep(0,320)),
+	ProjectModel = c(rep(0,320)),
+	ProjectSurvey = c(rep(0,320)),
+	ProjectDelta = c(rep(0,320))
+)
+
+TripsJTW <- data.frame(
+	HBW = c(0,0,0),
+	HBO = c(0,0,0),
+	NHB = c(0,0,0),
+	Label = c("0-car HHs","1-car HHs","2+car HHs")
+)
+
+while (TRUE) {
+  
+  #
+  # Read single line
+  line <- readLines(con, n=1)
+  
+  #
+  # Check for End of File and Don't read line-loads (saves running time)
+  if (!length(line) || grepl("Table  1023\\.01", line)) break
+        
+  #
+  # Get STOPS Version & run date (strings)
+  if (grepl("Version:", line) && !nzchar(STOPSVersion)) {
+    STOPSVersion <- trimws(substr(line,10,33))
+    RunDate      <- trimws(substr(line,120,129))
+    
+  #
+  # Get run name (string)
+  } else if (grepl("^Run: ", line) && !nzchar(RunName)) {
+    RunName <- trimws(substr(line,9,99))
+  
+  #
+  # Get base year (numeric)
+  } else if (grepl("Base Year", line)) {
+    BaseYear <- as.integer(substr(line,33,36))
+  
+  #
+  # Get NoBuild year (numeric)
+  } else if (grepl("No-Build Year", line)) {
+    NoBuildYear <- as.integer(substr(line,33,36))
+  
+  #
+  # Get Build year (numeric)
+  } else if (grepl("Build Year", line)) {
+    BuildYear <- as.integer(substr(line,33,36))
+    
+  #
+  # Get geography, TR, BG, TZ, AC
+  } else if (grepl("Output Report Filename", line)) {                                        
+    if (grepl("\\TZ_", line)) {
+      CTPPGeography <- "Y2000 Census TAZs"
+    } else if (grepl("\\BG_",line)) {
+      CTPPGeography <- "Y2000 Block Groups"
+    } else if (grepl("\\AC_",line)) {
+      CTPPGeography <- "2006-2010 ACS Zones"
+    } else if (grepl("\\A2_",line)) {
+      CTPPGeography <- "2012-2016 ACS Zones"
+    }
+
+  #
+  # Get boarding penalty (numeric)
+  } else if (grepl("Boarding Penalty", line)) {
+    BoardingPen <- as.numeric(substr(line,30,37))
+
+  #
+  # Get walk weight factor (numeric)
+  } else if (grepl("Bus and FG/Bus All-Mode", line)) {
+    WalkWeight <- as.numeric(substr(line,90,97))
+  
+  #
+  # Get PNR bus factor (numeric)
+  } else if (grepl("Bus and FG/Bus PNR pen", line)) {
+    PNRBus <- as.numeric(substr(line,90,97))
+  
+  #
+  # Get PNR transit factor (numeric)
+  } else if (grepl("PNR Density multiplier", line)) {
+    PNRTransit <- as.numeric(substr(line,90,97))
+  
+  #
+  # Get KNR usage factor (numeric)
+  } else if (grepl("KNR usage adjustment", line)) {
+    KNRTransit <- as.numeric(substr(line,92,100))
+  
+  #
+  # Get auto time factor (numeric)
+  } else if (grepl("Auto Time Factor", line)) {
+    AutoTimeFactor   <- as.numeric(substr(line,92,100))
+    AutoTimeConstant <- as.numeric(substr(line,104,110))
+    
+  #
+  # Get STOPS mode (string)
+  } else if (grepl("STOPS Mode", line)) {                                        
+    if (grepl("Type 2 SYNTHETIC with Special Markets",line)) {
+      STOPSMode <- "Synthetic + Incremental"
+    } else if (grepl("SYNTHETIC with Special Markets",line)) {
+      STOPSMode <- "Special Markets"
+    } else if (grepl("SYNTHETIC",line)) {
+      STOPSMode <- "Synthetic"
+    } else if (grepl("INCREMENTAL",line)) {
+      STOPSMode <- "Incremental"
+    }
+  
+  #
+  # Get FGS for project (numeric)
+  } else if (grepl("type=0", line) && FGS.Project==0) {
+    FGS.Project <- as.numeric(substr(line,38,43))
+  
+  #
+  # Get FGS for existing FG systems (numeric)
+  } else if (grepl("\\(other\\)", line) && FGS.Other==0) {
+    FGS.Other <- as.numeric(substr(line,38,43))
+  
+  #
+  # Estimated adjustment factor for unlinked trips (numeric)
+  } else if (grepl("Expected adjustment for unlinked trips=", line)) {
+    AdjustFactor <- as.numeric(substr(line,54,62))
+
+  #
+  # Get names & number of districts (string, numeric)
+  } else if (grepl("District-Level Calibration Targets Home-Based Work", line)) {    
+    readLines(con, 4)
+    ln <- readLines(con, 1)
+    while (!grepl("Calibration", ln)) {
+      district_list[[length(district_list)+1]] <- data.frame(
+        Number=as.integer(substr(ln,1,3)),
+        Label = substr(ln,6,10),
+        stringsAsFactors=FALSE
+      )
+      ln <- readLines(con, 1)
+    }
+
+  #
+  # Get station information
+  } else if (grepl("Table     1\\.02", line)) {
+    readLines(con, 4)
+    ln <- readLines(con, 1)
+    while (!grepl("=======", ln)) {
+      id1 <- trimws(substr(ln,133,156), "right")
+      id2 <- trimws(substr(ln,158,181), "right")
+      id3 <- trimws(substr(ln,183,206), "right")
+      id4 <- trimws(substr(ln,208,231), "right")
+      stopdata_list[[length(stopdata_list)+1]] <- data.frame(
+        ID          = if(nzchar(id1)) id1 else if(nzchar(id2)) id2 else if(nzchar(id3)) id3 else id4,
+        Name        = substr(ln,17,36),
+        Code        = substr(ln,38,46),
+        Group       = substr(ln,48,59),
+        Type        = as.integer(substr(ln,62,62)),
+        NewExisting = substr(ln,67,67),
+        Count       = as.numeric(substr(ln,76,85)),
+        WalkPen     = as.numeric(substr(ln,87,94)),
+        KNRPen      = as.numeric(substr(ln,96,103)),
+        PNRPen      = as.numeric(substr(ln,105,112)),
+        SamePen     = as.numeric(substr(ln,114,121)),
+        DiffPen     = as.numeric(substr(ln,123,130)),
+        stringsAsFactors=FALSE
+      )
+      ln <- readLines(con, 1)
+    }
+    ln <- readLines(con, 1)
+    StationBoardings <- as.numeric(substr(ln,77,85))
+
+  # #
+  # # Estimate Transfer Rate AND Get names & number of station group (string, numeric)
+  } else if (grepl("Table     3\\.01", line)) {
+    readLines(con, 3)
+    ln <- readLines(con, 1)
+    Modeled.Linked   <- as.numeric(substr(ln,37,47))
+    ln <- readLines(con, 1)
+    Modeled.Unlinked <- as.numeric(substr(ln,37,47))
+    Modeled.XferRate <- (Modeled.Unlinked / Modeled.Linked) - 1
+    readLines(con, 4)
+    ln <- readLines(con, 1)
+    ctr <- 1
+    while (!grepl("TOTAL", ln)) {
+      stationgroup_list[[length(stationgroup_list)+1]] <- data.frame(
+        Number=ctr,
+        Label =substr(ln,1,11),
+        stringsAsFactors=FALSE
+      )
+      ln <- readLines(con, 1)
+      ctr <- ctr + 1
+    }
+
+  #
+  # Get names & number of stations (string, numeric)
+  } else if (grepl("Table     4\\.04", line) && !CalibFlag) {
+    readLines(con, 6)
+    ln <- readLines(con, 1)
+    ctr <- 1
+    while (!grepl("Total", ln)) {
+      station_list[[length(station_list)+1]] <- data.frame(
+        Number=ctr,
+        Label =substr(ln,1,9),
+        stringsAsFactors=FALSE
+      )
+      ln <- readLines(con, 1)
+      ctr <- ctr + 1
+    }
+
+  #
+  # Get Station/Stop Counts & Boardings  (dataframe)
+  } else if (grepl("Table     9\\.01", line)) {
+    readLines(con, 8)
+    ln <- readLines(con, 1)
+    while (!grepl("===========", ln)) {
+      stopboarding_list[[length(stopboarding_list)+1]] <- data.frame(
+        ID=trimws(substr(ln,1,25),"right"),
+        Name=substr(ln,26,46),
+        ExistWalk =as.numeric(substr(ln,47,56)),
+        ExistKNR  =as.numeric(substr(ln,57,66)),
+        ExistPNR  =as.numeric(substr(ln,67,76)),
+        ExistXfer =as.numeric(substr(ln,77,86)),
+        ExistTotal=as.numeric(substr(ln,87,96)),
+        NoBuildWalk =as.numeric(substr(ln,97,106)),
+        NoBuildKNR  =as.numeric(substr(ln,107,116)),
+        NoBuildPNR  =as.numeric(substr(ln,117,126)),
+        NoBuildXfer =as.numeric(substr(ln,127,136)),
+        NoBuildTotal=as.numeric(substr(ln,137,146)),
+        BuildWalk   =as.numeric(substr(ln,147,156)),
+        BuildKNR    =as.numeric(substr(ln,157,166)),
+        BuildPNR    =as.numeric(substr(ln,167,176)),
+        BuildXfer   =as.numeric(substr(ln,177,186)),
+        BuildTotal  =as.numeric(substr(ln,187,196)),
+        stringsAsFactors=FALSE
+      )
+      ln <- readLines(con, 1)
+    }
+  
+  #
+  # Get Route Counts & Boardings  (dataframe)
+  } else if (grepl("Table    10\\.01", line)) {
+    readLines(con, 8)
+    ln <- readLines(con, 1)
+    while (!grepl("Total", ln)) {
+      routeboarding_list[[length(routeboarding_list)+1]] <- data.frame(
+        ID=substr(ln,1,25),
+        Name=substr(ln,26,55),
+        Count=as.numeric(substr(ln,57,64)),
+        ExistWalk  =as.numeric(substr(ln,66,74)),
+        ExistKNR   =as.numeric(substr(ln,76,84)),
+        ExistPNR   =as.numeric(substr(ln,86,94)),
+        ExistTotal =as.numeric(substr(ln,96,104)),
+        NoBuildWalk=as.numeric(substr(ln,106,114)),
+        NoBuildKNR =as.numeric(substr(ln,116,124)),
+        NoBuildPNR =as.numeric(substr(ln,126,134)),
+        NoBuildTotal=as.numeric(substr(ln,136,144)),
+        BuildWalk   =as.numeric(substr(ln,146,154)),
+        BuildKNR    =as.numeric(substr(ln,156,164)),
+        BuildPNR    =as.numeric(substr(ln,166,174)),
+        BuildTotal  =as.numeric(substr(ln,176,184)),
+        stringsAsFactors=FALSE
+      )
+      ln <- readLines(con, 1)
+    }
+
+  #
+  # Get Route by Stop Group Counts & Boardings  (dataframe)
+  } else if (grepl("Table    10\\.02", line)) {
+    readLines(con, 8)
+    ln <- readLines(con, 1)
+    tmpID <- tmpRoute <- NULL
+    while (!grepl("Total", ln)) {
+      if (nzchar(trimws(substr(ln,1,25)))) {
+        tmpID    <- trimws(substr(ln,1,25))
+        tmpRoute <- substr(ln,26,55)
+      }
+      routebystop_list[[length(routebystop_list)+1]] <- data.frame(
+        ID       = if(nzchar(trimws(substr(ln,1,25)))) trimws(substr(ln,1,25)) else tmpID,
+        Route    = if(nzchar(trimws(substr(ln,1,25)))) substr(ln,26,55)       else tmpRoute,
+        StopGroup=substr(ln,26,55),
+        Count    =as.numeric(substr(ln,57,64)),
+        ExistWalk  =as.numeric(substr(ln,66,74)),
+        ExistKNR   =as.numeric(substr(ln,76,84)),
+        ExistPNR   =as.numeric(substr(ln,86,94)),
+        ExistTotal =as.numeric(substr(ln,96,104)),
+        ExistDeltaT=0,
+        NoBuildWalk  =as.numeric(substr(ln,106,114)),
+        NoBuildKNR   =as.numeric(substr(ln,116,124)),
+        NoBuildPNR   =as.numeric(substr(ln,126,134)),
+        NoBuildTotal =as.numeric(substr(ln,136,144)),
+		NoBuildDeltaW=0,
+		NoBuildDeltaK=0,
+		NoBuildDeltaP=0,
+		NoBuildDeltaT=0,
+        BuildWalk   =as.numeric(substr(ln,146,154)),
+        BuildKNR    =as.numeric(substr(ln,156,164)),
+        BuildPNR    =as.numeric(substr(ln,166,174)),
+        BuildTotal  =as.numeric(substr(ln,176,184)),
+		BuildDeltaW =0,
+		BuildDeltaK =0,
+		BuildDeltaP =0,
+		BuildDeltaT =0,
+        stringsAsFactors=FALSE
+      )
+      ln <- readLines(con, 1)
+    }
+    # now the stop‐group boardings
+    ln <- readLines(con,1)
+    while (!grepl("All Groups", ln)) {
+      stopgroupboarding_list[[length(stopgroupboarding_list)+1]] <- data.frame(
+        StopGroup    = substr(ln,26,55),
+        Count        = as.numeric(substr(ln,57,64)),
+        ExistWalk    = as.numeric(substr(ln,66,74)),
+        ExistKNR     = as.numeric(substr(ln,76,84)),
+        ExistPNR     = as.numeric(substr(ln,86,94)),
+        ExistTotal   = as.numeric(substr(ln,96,104)),
+		ExistDeltaT  = 0,
+        NoBuildWalk  = as.numeric(substr(ln,106,114)),
+        NoBuildKNR   = as.numeric(substr(ln,116,124)),
+        NoBuildPNR   = as.numeric(substr(ln,126,134)),
+        NoBuildTotal = as.numeric(substr(ln,136,144)),
+		NoBuildDeltaW= 0,
+		NoBuildDeltaK= 0,
+		NoBuildDeltaP= 0,
+		NoBuildDeltaT= 0,
+        BuildWalk    = as.numeric(substr(ln,146,154)),
+        BuildKNR     = as.numeric(substr(ln,156,164)),
+        BuildPNR     = as.numeric(substr(ln,166,174)),
+        BuildTotal   = as.numeric(substr(ln,176,184)),
+		BuildDeltaW  = 0,
+		BuildDeltaK  = 0,
+		BuildDeltaP  = 0,
+		BuildDeltaT  = 0,		
+        stringsAsFactors=FALSE
+      )
+      ln <- readLines(con,1)
+    }
+
+  #
+  # Get route-level boardings by mode of access
+  } else if (grepl("Table    10\\.05", line)) {
+    readLines(con,8)
+    ln <- readLines(con,1)
+    while (!grepl("Total", ln)) {
+      routebyaccess_list[[length(routebyaccess_list)+1]] <- data.frame(
+        ID=substr(ln,1,25),
+        Route=substr(ln,26,55),
+        Count=as.numeric(substr(ln,57,64)),
+        ExistWalk =as.numeric(substr(ln,66,74)),
+        ExistKNR  =as.numeric(substr(ln,76,84)),
+        ExistPNR  =as.numeric(substr(ln,86,94)),
+        ExistXfer =as.numeric(substr(ln,96,104)),
+        ExistTotal=as.numeric(substr(ln,106,114)),
+		ExistDelta=0,
+        NoBuildWalk =as.numeric(substr(ln,116,124)),
+        NoBuildKNR  =as.numeric(substr(ln,126,134)),
+        NoBuildPNR  =as.numeric(substr(ln,136,144)),
+        NoBuildXfer =as.numeric(substr(ln,146,154)),
+        NoBuildTotal=as.numeric(substr(ln,156,164)),
+		NoBuildDelta=0,
+        BuildWalk   =as.numeric(substr(ln,166,174)),
+        BuildKNR    =as.numeric(substr(ln,176,184)),
+        BuildPNR    =as.numeric(substr(ln,186,194)),
+        BuildXfer   =as.numeric(substr(ln,196,204)),
+        BuildTotal  =as.numeric(substr(ln,206,214)),
+		BuildDelta  =0,
+        stringsAsFactors=FALSE
+      )
+      ln <- readLines(con,1)
+    }
+		
+  #
+  # Get Route-to-route transfers  (dataframe)
+  } else if (grepl("Table    10\\.06", line)) {
+    readLines(con,8)
+    ln <- readLines(con,1)
+    tmpID <- tmpRoute <- NULL
+    while (grepl(" | ", ln, fixed=TRUE)) {
+      if (nzchar(trimws(substr(ln,1,25)))) {
+        tmpID <- trimws(substr(ln,1,25))
+        tmpRoute <- substr(ln,26,55)
+      }
+      routexfers_list[[length(routexfers_list)+1]] <- data.frame(
+        ID=if(nzchar(trimws(substr(ln,1,25)))) trimws(substr(ln,1,25)) else tmpID,
+        Route=if(nzchar(trimws(substr(ln,1,25)))) substr(ln,26,55) else tmpRoute,
+        ExistID    =substr(ln,59,83),
+        ExistRoute =substr(ln,84,113),
+        ExistXfer  =as.numeric(substr(ln,114,123)),
+        NoBuildID    =substr(ln,127,151),
+        NoBuildRoute =substr(ln,152,181),
+        NoBuildXfer  =as.numeric(substr(ln,182,191)),
+        BuildID      =substr(ln,195,219),
+        BuildRoute   =substr(ln,220,249),
+        BuildXfer    =as.numeric(substr(ln,250,259)),
+        stringsAsFactors=FALSE
+      )
+      ln <- readLines(con,1)
+    }
+    		
+  #
+  # Get trip breakdown HBW (dataframe)
+  } else if (grepl("Table    11\\.01", line)) {
+    readLines(con,7)
+    ln <- readLines(con,1); ctr<-1
+    while (!grepl("======= =================== =============", ln)) {
+      TripBreakdown$ExistModel[ctr]  <- as.numeric(substr(ln,44,50))
+      TripBreakdown$ExistSurvey[ctr] <- as.numeric(substr(ln,52,58))
+      TripBreakdown$ExistDelta[ctr]  <- TripBreakdown$ExistModel[ctr] - TripBreakdown$ExistSurvey[ctr]
+      TripBreakdown$NoBuildModel[ctr]  <- as.numeric(substr(ln,61,67))
+      TripBreakdown$NoBuildSurvey[ctr] <- as.numeric(substr(ln,69,75))
+      TripBreakdown$NoBuildDelta[ctr]  <- TripBreakdown$NoBuildModel[ctr] - TripBreakdown$ExistSurvey[ctr]
+      TripBreakdown$BuildModel[ctr]  <- as.numeric(substr(ln,78,84))
+      TripBreakdown$BuildSurvey[ctr] <- as.numeric(substr(ln,86,92))
+      TripBreakdown$BuildDelta[ctr]  <- TripBreakdown$BuildModel[ctr] - TripBreakdown$NoBuildSurvey[ctr]
+      TripBreakdown$ProjectModel[ctr]  <- as.numeric(substr(ln,95,101))
+      TripBreakdown$ProjectSurvey[ctr] <- as.numeric(substr(ln,103,109))
+      TripBreakdown$ProjectDelta[ctr]  <- TripBreakdown$ProjectModel[ctr] - TripBreakdown$BuildSurvey[ctr]
+      ln <- readLines(con,1); ctr<-ctr+1
+      if (ctr>80) break
+      if ((ctr-1)%%4==0) ln<-readLines(con,1)
+    }
+
+  #
+  # Get trip breakdown HBO (dataframe)
+  } else if (grepl("Table    11\\.02", line)) {
+    readLines(con,7)
+    ln <- readLines(con,1); ctr<-81
+    while (!grepl("======= =================== =============", ln)) {
+      TripBreakdown$ExistModel[ctr]  <- as.numeric(substr(ln,44,50))
+      TripBreakdown$ExistSurvey[ctr] <- as.numeric(substr(ln,52,58))
+      TripBreakdown$ExistDelta[ctr]  <- TripBreakdown$ExistModel[ctr] - TripBreakdown$ExistSurvey[ctr]
+      TripBreakdown$NoBuildModel[ctr]  <- as.numeric(substr(ln,61,67))
+      TripBreakdown$NoBuildSurvey[ctr] <- as.numeric(substr(ln,69,75))
+      TripBreakdown$NoBuildDelta[ctr]  <- TripBreakdown$NoBuildModel[ctr] - TripBreakdown$ExistSurvey[ctr]
+      TripBreakdown$BuildModel[ctr]  <- as.numeric(substr(ln,78,84))
+      TripBreakdown$BuildSurvey[ctr] <- as.numeric(substr(ln,86,92))
+      TripBreakdown$BuildDelta[ctr]  <- TripBreakdown$BuildModel[ctr] - TripBreakdown$NoBuildSurvey[ctr]
+      TripBreakdown$ProjectModel[ctr]  <- as.numeric(substr(ln,95,101))
+      TripBreakdown$ProjectSurvey[ctr] <- as.numeric(substr(ln,103,109))
+      TripBreakdown$ProjectDelta[ctr]  <- TripBreakdown$ProjectModel[ctr] - TripBreakdown$BuildSurvey[ctr]
+      ln <- readLines(con,1); ctr<-ctr+1
+      if (ctr>160) break
+      if ((ctr-1)%%4==0) ln<-readLines(con,1)
+    }
+
+  #
+  # Get trip breakdown NHB (dataframe)
+  } else if (grepl("Table    11\\.03", line)) {
+    readLines(con,7)
+    ln <- readLines(con,1); ctr<-161
+    while (!grepl("======= =================== =============", ln)) {
+      TripBreakdown$ExistModel[ctr]  <- as.numeric(substr(ln,44,50))
+      TripBreakdown$ExistSurvey[ctr] <- as.numeric(substr(ln,52,58))
+      TripBreakdown$ExistDelta[ctr]  <- TripBreakdown$ExistModel[ctr] - TripBreakdown$ExistSurvey[ctr]
+      TripBreakdown$NoBuildModel[ctr]  <- as.numeric(substr(ln,61,67))
+      TripBreakdown$NoBuildSurvey[ctr] <- as.numeric(substr(ln,69,75))
+      TripBreakdown$NoBuildDelta[ctr]  <- TripBreakdown$NoBuildModel[ctr] - TripBreakdown$ExistSurvey[ctr]
+      TripBreakdown$BuildModel[ctr]  <- as.numeric(substr(ln,78,84))
+      TripBreakdown$BuildSurvey[ctr] <- as.numeric(substr(ln,86,92))
+      TripBreakdown$BuildDelta[ctr]  <- TripBreakdown$BuildModel[ctr] - TripBreakdown$NoBuildSurvey[ctr]
+      TripBreakdown$ProjectModel[ctr]  <- as.numeric(substr(ln,95,101))
+      TripBreakdown$ProjectSurvey[ctr] <- as.numeric(substr(ln,103,109))
+      TripBreakdown$ProjectDelta[ctr]  <- TripBreakdown$ProjectModel[ctr] - TripBreakdown$BuildSurvey[ctr]
+      ln <- readLines(con,1); ctr<-ctr+1
+      if (ctr>240) break
+      if ((ctr-1)%%4==0) ln<-readLines(con,1)
+    }
+    for (i in 241:320) {
+      TripBreakdown$ExistModel[i]  <- sum(TripBreakdown$ExistModel[i-240],
+                                          TripBreakdown$ExistModel[i-160],
+                                          TripBreakdown$ExistModel[i-80])
+      TripBreakdown$ExistSurvey[i] <- sum(TripBreakdown$ExistSurvey[i-240],
+                                          TripBreakdown$ExistSurvey[i-160],
+                                          TripBreakdown$ExistSurvey[i-80])
+      TripBreakdown$ExistDelta[i]  <- TripBreakdown$ExistModel[i] - TripBreakdown$ExistSurvey[i]
+      TripBreakdown$NoBuildModel[i]  <- sum(TripBreakdown$NoBuildModel[i-240],
+                                            TripBreakdown$NoBuildModel[i-160],
+                                            TripBreakdown$NoBuildModel[i-80])
+      TripBreakdown$NoBuildSurvey[i] <- sum(TripBreakdown$NoBuildSurvey[i-240],
+                                            TripBreakdown$NoBuildSurvey[i-160],
+                                            TripBreakdown$NoBuildSurvey[i-80])
+      TripBreakdown$NoBuildDelta[i]  <- TripBreakdown$NoBuildModel[i] - TripBreakdown$NoBuildSurvey[i]
+      TripBreakdown$BuildModel[i]  <- sum(TripBreakdown$BuildModel[i-240],
+                                          TripBreakdown$BuildModel[i-160],
+                                          TripBreakdown$BuildModel[i-80])
+      TripBreakdown$BuildSurvey[i] <- sum(TripBreakdown$BuildSurvey[i-240],
+                                          TripBreakdown$BuildSurvey[i-160],
+                                          TripBreakdown$BuildSurvey[i-80])
+      TripBreakdown$BuildDelta[i]  <- TripBreakdown$BuildModel[i] - TripBreakdown$BuildSurvey[i]
+      TripBreakdown$ProjectModel[i]  <- sum(TripBreakdown$ProjectModel[i-240],
+                                           TripBreakdown$ProjectModel[i-160],
+                                           TripBreakdown$ProjectModel[i-80])
+      TripBreakdown$ProjectSurvey[i] <- sum(TripBreakdown$ProjectSurvey[i-240],
+                                           TripBreakdown$ProjectSurvey[i-160],
+                                           TripBreakdown$ProjectSurvey[i-80])
+      TripBreakdown$ProjectDelta[i]  <- TripBreakdown$ProjectModel[i] - TripBreakdown$ProjectSurvey[i]
+    }
+
+  #
+  # Population Existing, No-Build & Build Transit Service (dataframe)
+  } else if (grepl("Table    12\\.01", line)) {
+    readLines(con, 9)
+    ln <- readLines(con, 1)
+    while (substr(ln,1,5) != "Total") {
+      sedata_list[[length(sedata_list)+1]] <- data.frame(
+        District       = substr(ln,1,8),
+        CTPPWorker     = as.numeric(substr(ln,10,17)),
+        CTPPEmployment = as.numeric(substr(ln,19,26)),
+        CTPPPop        = as.numeric(substr(ln,28,35)),
+        ExPop          = as.numeric(substr(ln,37,44)),
+        NBPop          = as.numeric(substr(ln,46,53)),
+        BPop           = as.numeric(substr(ln,55,62)),
+        CTPPEmp        = as.numeric(substr(ln,64,71)),
+        ExEmp          = as.numeric(substr(ln,73,80)),
+        NBEmp          = as.numeric(substr(ln,82,89)),
+        BEmp           = as.numeric(substr(ln,91,98)),
+        stringsAsFactors=FALSE
+      )
+      ln <- readLines(con, 1)
+    }
+    
+  #
+  # D2D matrix of highway speeds (numeric)
+  } else if (grepl("Table    13\\.07", line)) {                                      
+    line = readLines(con, n=5) # Skip lines
+    
+    District <- bind_rows(district_list)
+    n <- nrow(District)
+    # Read in original line and next NumDistricts lines into matrix
+    HighwaySpeed.mat <- matrix(, nrow=nrow(District), ncol=nrow(District))
+    rownames(HighwaySpeed.mat) <- District$Label
+    colnames(HighwaySpeed.mat) <- District$Label
+    for (i in 1:nrow(District)) {
+      line = readLines(con, n=1)
+      for (j in seq(7,((nrow(District)-1)*9+7),9)) {
+        # print(paste(i,"  ",j))
+        k = ((j -7) / 9) + 1
+        HighwaySpeed.mat[i,k] = as.numeric(substr(line,j,j+9))
+      }
+    }
+  #
+  # Get route level boarding total (numeric)
+  } else if (grepl("Grand total", line)) {
+    RouteBoardings <- as.numeric(substr(line, 74, 85))
+  
+  #
+  # Get regional calibration option (character)
+  }   else if (grepl("Regional calibration to transit boardings", line)) {
+    if (grepl("OFF", line)) {
+      GroupCalibration <- "Option 00, no group calibration approach selected"
+    }
+    else if (grepl("ON", line)) {
+      cfg_line <- readLines(con, 1)
+      if      (grepl("Station group calibration OFF", cfg_line)) {
+        GroupCalibration <- "Option 01, no group calibration"
+      }
+      else if (grepl("OD matrix adjustment based on station/station group calibration", cfg_line)) {
+        GroupCalibration <- "Option 10, OD adjustment for station/station groups"
+      }
+      else if (grepl("OD matrix adjustment based on route group calibration", cfg_line)) {
+        GroupCalibration <- "Option 11, OD adjustment for routes"
+      }
+      else if (grepl("OD matrix adjustment based on station/stop and route group calibration", cfg_line)) {
+        GroupCalibration <- "Option 12, OD adjustment for routes and stops"
+      }
+    } 
+
+  #
+  # Get CTPP calibration option (character)
+  } else if (grepl("District-level calibration to normalized CTPP shares", line)) {
+    if (grepl("at Attraction level of aggregation", line)) {
+      CTPPCalibration <- "Option 0 or 1, calibrating to attraction districts only"
+    } else {
+      CTPPCalibration <- "Option 2, calibrating to both production and attraction districts"
+    }
+          
+  #
+  # Get unlinked, linked, observed transfer transit trip goals (numeric)
+  } else if (grepl("Input regional unlinked transit trips", line)) {
+    UnlinkedTripTarget <- as.numeric(substr(line, 41, 54))
+    for (i in 1:12) {
+      trip_line <- readLines(con, 1)
+      LinkedTrips$Trips[i] <- as.numeric(substr(trip_line, 41, 54))
+    }
+    LinkedTrips$Trips[13] <- sum(LinkedTrips$Trips[c(4, 8, 12)])
+    if (ObservedXferRate < 0.01) {
+      ObservedXferRate <- UnlinkedTripTarget / LinkedTrips$Trips[13] - 1
+    }
+    
+  #
+  # Get Trip/JTW settings (numeric)
+  } else if (grepl("Trips/JTW", line)) {
+    # HBW
+    TripsJTW$HBW[1:3] <- as.numeric(substr(line, c(39,49,59), c(48,58,68)))
+    # HBO
+    line <- readLines(con, 1)
+    TripsJTW$HBO[1:3] <- as.numeric(substr(line, c(39,49,59), c(48,58,68)))
+    # NHB
+    line <- readLines(con, 1)
+    TripsJTW$NHB[1:3] <- as.numeric(substr(line, c(39,49,59), c(48,58,68)))
+  }  
+}
+
+close(con)
+
+# Collapse lists into data.frames and compute deltas/totals
+District            <- bind_rows(district_list)
+StopData            <- bind_rows(stopdata_list)
+StationGroup        <- bind_rows(stationgroup_list)
+Station             <- bind_rows(station_list)
+StopBoarding        <- bind_rows(stopboarding_list) %>%
+                        mutate(
+                          NoBuildDelta = NoBuildTotal - ExistTotal,
+                          BuildDelta   = BuildTotal   - NoBuildTotal
+                        ) %>%
+                        adorn_totals("row")
+RouteBoarding       <- bind_rows(routeboarding_list) %>%
+                        mutate(
+                          ExistDelta   = ExistTotal   - Count,
+                          NoBuildDelta = NoBuildTotal - ExistTotal,
+                          BuildDelta   = BuildTotal   - NoBuildTotal
+                        ) %>%
+                        adorn_totals("row")
+RouteByStop         <- bind_rows(routebystop_list) %>%
+                        filter(!is.na(ExistWalk))
+StopGroupBoarding   <- bind_rows(stopgroupboarding_list)
+RouteByAccess       <- bind_rows(routebyaccess_list) %>%
+                        mutate(
+                          ExistDelta   = ExistTotal   - Count,
+                          NoBuildDelta = NoBuildTotal - ExistTotal,
+                          BuildDelta   = BuildTotal   - NoBuildTotal
+                        ) %>%
+                        adorn_totals("row")
+RouteXfers          <- bind_rows(routexfers_list)
+SEData              <- bind_rows(sedata_list)
+
+
+```
+
+***
+
+# 1.0 `r HTMLTitle` 
+The purpose of this report is to document that calibration and results of a STOPS run for technical QA/QC purposes. It can also be used to communicate information about the project. Additionally, it can serve as a useful reference when questions unexpectedly arise.
+
+This **`r HTMLTitle`** version of the STOPS application **`r RunName`** is using STOPS version **`r STOPSVersion`**, and was run on **`r RunDate`**. The results file being reported is: **`r STOPSResultsFile`**.
+
+The STOPS mode for this run is **`r STOPSMode`**. The base year is **`r BaseYear`**, the No-Build year is **`r NoBuildYear`** and the Build year is **`r BuildYear`**. If the No-Build and Build scenarios have yet to be defined, the years will be zero.
+
+The files used to generate this report are:
+
+* `r toupper(STOPSResultsFile)`, dated `r file.mtime(STOPSResultsFile)`
+
+* `r toupper(STOPSControlFile)`, dated `r file.mtime(STOPSControlFile)`
+
+* `r toupper(STOPSStationSHPFile)`, dated `r file.mtime(STOPSStationSHPFile)`
+
+* `r toupper(STOPSDistrictSHPFile)`, dated `r file.mtime(STOPSDistrictSHPFile)`
+
+```{r ReadSTOPSfile,echo=FALSE, message=FALSE, warning=FALSE}
+
+#
+# Read STOPS file results Sections 3, 4, 5 and 6
+#
+
+
+
+#
+# Open connection to STOPS output file
+con = file(STOPSResultsFile, "r")
+
+while (TRUE) {
+  
+  #
+  # Read single line
+  line = readLines(con, n=1)
+
+  #
+  # Check for End of File and Don't read line-loads (saves running time)
+  if (!length(line) || grepl("Table  1023\\.01", line)) break
+
+  #
+  # Get SG trips to counts values (numeric)
+  if (regexpr("Table     2.04",line)>0) {    
+    SG.prod <- data.frame(
+      Label = StationGroup$Label,
+      Trips = rep(0,nrow(StationGroup)),
+      Count = rep(0,nrow(StationGroup))
+    )    
+    line = readLines(con, n=4) # Skip lines
+    line = readLines(con, n=1) 
+    RawBoardings = as.numeric(substr(line,37,47))
+    line = readLines(con, n=1) 
+    TargetBoardings = as.numeric(substr(line,37,47))
+    line = readLines(con, n=1) 
+    RegCalib = as.numeric(substr(line,39,47))
+    line = readLines(con, n=1) # Skip lines
+    line = readLines(con,n=1)
+    Tcol = regexpr("TOTAL",line) # Column where TOTAL
+    Ccol = regexpr("COUNT",line)# Column where COUNT
+    line = readLines(con,n=2) # Skip lines
+    line = readLines(con,n=1)
+    i = 1
+    while (regexpr("TOTAL",line)<=0) {
+      SG.prod$Trips[i] = as.numeric(substr(line,(Tcol-1),(Tcol+5)))
+      SG.prod$Count[i] = as.numeric(substr(line,(Ccol-1),(Ccol+5)))
+      if (is.na(SG.prod$Trips[i])) { SG.prod$Trips[i] = 0 } # to handle STOPS' '-' as 0
+      if (is.na(SG.prod$Count[i])) { SG.prod$Count[i] = 0 } # to handle STOPS' '-' as 0
+      line = readLines(con,n=1)
+      i = i + 1
+    }      
+    SG.prod$Corridor <- c(rep(1,TopNumStationGroups),rep(2,nrow(SG.prod)-TopNumStationGroups))   
+
+  #
+  # D2D matrix of incremental linked transit trips (numeric)
+  } else if (regexpr("Table     4.02",line)>0) {                                      
+    Table402.mat <- ReadDistrict(con,District,6,7,9)
+    Table402 <- addmargins(Table402.mat, FUN = list(Total = sum), quiet = TRUE)
+  
+  #
+  # D2D matrix of project trips (numeric)
+  } else if (regexpr("Table     4.03",line)>0) {
+    Table403.mat <- ReadDistrict(con,District,6,7,9)
+    Table403 <- addmargins(Table403.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # S2S matrix of project trips (numeric)
+  } else if (regexpr("Table     4.04",line)>0) {   
+    if (!CalibFlag) { # Station-to-station only appears with a project
+      Table404.mat <- ReadStation(con,Station,6,10,10)
+      Table404 <- addmargins(Table404.mat, FUN = list(Total = sum), quiet = TRUE)
+    } else {
+      # Do Nothing
+    }
+
+  #
+  # D2D matrix of 0-car project trips (numeric)
+  } else if (regexpr("Table     6.03",line)>0) {                                      
+    Table603.mat <- ReadDistrict(con,District,6,7,9)
+    Table603 <- addmargins(Table603.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of PMT (numeric)
+  } else if (regexpr("Table     8.01",line)>0) {                                      
+    Table801.mat <- ReadDistrict(con,District,6,7,9)
+    Table801 <- addmargins(Table801.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # Peak Existing, No-Build & Build Transit Service (dataframe)
+  } else if (regexpr("Table    10.03",line)>0) {                                      
+    line = readLines(con, n=9) # Skip lines
+    line = readLines(con, n=1)
+    while (!(substr(line,51,55) %in% "Total")) {
+      Route.pk <- rbind(Route.pk, data.frame(
+        ID = substr(line,1,25),
+        Name = substr(line,26,55),
+        ExTrips = as.numeric(substr(line,57,62)),
+        ExMiles = as.numeric(substr(line,64,75)),
+        ExHours = as.numeric(substr(line,77,88)),
+        NBTrips = as.numeric(substr(line,90,95)),
+        NBMiles = as.numeric(substr(line,97,108)),
+        NBHours = as.numeric(substr(line,110,121)),
+        BTrips = as.numeric(substr(line,123,128)),
+        BMiles = as.numeric(substr(line,130,141)),
+        BHours = as.numeric(substr(line,143,154))
+      )) 
+      line = readLines(con, n=1)
+    }
+
+  #
+  # Off-peak Existing, No-Build & Build Transit Service (dataframe)
+  } else if (regexpr("Table    10.04",line)>0) {                                      
+    line = readLines(con, n=9) # Skip lines
+    line = readLines(con, n=1)
+    while (!(substr(line,51,55) %in% "Total")) {
+      Route.op <- rbind(Route.op, data.frame(
+        ID = substr(line,1,25),
+        Name = substr(line,26,55),
+        ExTrips = as.numeric(substr(line,57,62)),
+        ExMiles = as.numeric(substr(line,64,75)),
+        ExHours = as.numeric(substr(line,77,88)),
+        NBTrips = as.numeric(substr(line,90,95)),
+        NBMiles = as.numeric(substr(line,97,108)),
+        NBHours = as.numeric(substr(line,110,121)),
+        BTrips = as.numeric(substr(line,123,128)),
+        BMiles = as.numeric(substr(line,130,141)),
+        BHours = as.numeric(substr(line,143,154))
+      )) 
+      line = readLines(con, n=1)
+    }
+
+  #
+  # D2D matrix of NoBuild highway speeds (numeric)
+  } else if (regexpr("Table    13.08",line)>0) {                                      
+    Table1308.mat <- ReadDistrict(con,District,5,7,9)
+    Table1308 <- addmargins(Table1308.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of Build highway speeds (numeric)
+  } else if (regexpr("Table    13.09",line)>0) {                                      
+    Table1309.mat <- ReadDistrict(con,District,5,7,9)
+    Table1309 <- addmargins(Table1309.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #######################################################################
+  #
+  # D2D matrix of HBW existing transit trips (numeric)
+  } else if (regexpr("Table    93.01",line)>0) {                                      
+    Table9301.mat <- ReadDistrict(con,District,6,7,9)
+    Table9301 <- addmargins(Table9301.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of HBO existing transit trips (numeric)
+  } else if (regexpr("Table   177.01",line)>0) {                                      
+    Table17701.mat <- ReadDistrict(con,District,6,7,9)
+    Table17701 <- addmargins(Table17701.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of NHB existing transit trips (numeric)
+  } else if (regexpr("Table   261.01",line)>0) {                                      
+    Table26101.mat <- ReadDistrict(con,District,6,7,9)
+    Table26101 <- addmargins(Table26101.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of 0-car existing transit trips (numeric)
+  } else if (regexpr("Table   282.01",line)>0) {                                      
+    Table28201.mat <- ReadDistrict(con,District,6,7,9)
+    Table28201 <- addmargins(Table28201.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of 1-car existing transit trips (numeric)
+  } else if (regexpr("Table   303.01",line)>0) {                                      
+    Table30301.mat <- ReadDistrict(con,District,6,7,9)
+    Table30301 <- addmargins(Table30301.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of 2+car existing transit trips (numeric)
+  } else if (regexpr("Table   324.01",line)>0) {                                      
+    Table32401.mat <- ReadDistrict(con,District,6,7,9)
+    Table32401 <- addmargins(Table32401.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of existing Bus transit trips  (numeric)
+  } else if (regexpr("Table   341.01",line)>0) {                                      
+    Table34101.mat <- ReadDistrict(con,District,6,7,9)
+    Table34101 <- addmargins(Table34101.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of existing walk transit trips  (numeric)
+  } else if (regexpr("Table   342.01",line)>0) {                                      
+    Table34201.mat <- ReadDistrict(con,District,6,7,9)
+    Table34201 <- addmargins(Table34201.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of existing knr transit trips  (numeric)
+  } else if (regexpr("Table   343.01",line)>0) {                                      
+    Table34301.mat <- ReadDistrict(con,District,6,7,9)
+    Table34301 <- addmargins(Table34301.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of existing pnr transit trips  (numeric)
+  } else if (regexpr("Table   344.01",line)>0) {                                      
+    Table34401.mat <- ReadDistrict(con,District,6,7,9)
+    Table34401 <- addmargins(Table34401.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of existing transit trips  (numeric)
+  } else if (regexpr("Table   345.01",line)>0) {                                      
+    Table34501.mat <- ReadDistrict(con,District,6,7,9)
+    Table34501 <- addmargins(Table34501.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  #
+  # D2D matrix of No-Build Trips (numeric)
+  } else if (regexpr("Table   681.01",line)>0) {                                      
+    Table68101.mat <- ReadDistrict(con,District,6,7,9)
+    Table68101 <- addmargins(Table68101.mat, FUN = list(Total = sum), quiet = TRUE)
+
+  # Next item here
+  }  
+}
+
+close(con)
+
+```
+
+
+``` {r TopNumDecision,echo=FALSE, message=FALSE, warning=FALSE}
+
+# Develop lists needed for ORGANIZEMATRIX and WRITEMATRIX functions
+
+# Order D2D rows/columns according to # of Project Trips (or Existing Trips)
+if (TopNumFlag == 1) {
+  if (!CalibFlag) {
+    # Sort districts by # of project trips (using TopNumDistricts)
+    RowSortList <- SortList(Table403,1)
+    ColSortList <- SortList(Table403,2)
+  } else {
+    # Sort districts by # of existing transit trips  (using TopNumDistricts)
+    RowSortList <- SortList(Table34501,1)
+    ColSortList <- SortList(Table34501,2)
+  }
+} else if (TopNumFlag == 2) {
+  # Keep corridor district order (using TopNumCorridor)
+  RowSortList <- SortList(Table403,3)
+  ColSortList <- SortList(Table403,3)
+  TopNumDistricts <- TopNumCorridor
+}
+
+# For matrices with no total column; this is needed sometimes
+RowSortList.nt <- RowSortList[-length(RowSortList)]
+ColSortList.nt <- ColSortList[-length(ColSortList)]
+
+# Order S2S rows/columns according to # of Project Trips
+if (!CalibFlag) {
+  RowSortListStation <- SortList(Table404,1)
+  ColSortListStation <- SortList(Table404,2)
+
+  # For matrices with no total column; this is needed sometimes
+  RowSortListStation.nt <- RowSortListStation[-length(RowSortListStation)]
+  ColSortListStation.nt <- ColSortListStation[-length(ColSortListStation)]
+} 
+
+
+```
+
+
+# 2.0 Settings & Inputs
+This section reviews the primary settings and options available within STOPS. It also reviews the input data STOPS requires and uses for calibration. Finally, it reviews the tabulation setups, including the district and station group systems. This helps to ensure that STOPS has the best information and is properly designed to use the information.
+
+Please note that most descriptions in this section are quoted directly from the "Simplified Trips on Project Software User Guide Version 2.52-2.53" written in February 28, 2024. 
+
+## 2.1 Primary Settings {.tabset}
+This application uses STOPS' **`r STOPSMode`** mode, using the **`r STOPSVersion`** version. "This parameter controls the type of model that STOPS uses to forecast transit ridership. The options are: 
+
+1. Synthetic. This is the default mode and means that STOPS generates estimates of transit ridership from travel patterns contained in the Census Transportation Planning Products (CTPP), transit service characteristics from transit schedules, and transit usage obtained from count databases.  This form of the model is most similar to conventional ridership forecasting procedures.
+
+2. Special Markets. The mode is similar to the Synthetic Mode but adds travel demand estimates for special markets that are not well-represented by the CTPP Journey-to-Work (JTW) flows.  Example special markets include air passengers and university students.  When this option is selected, the user should also specify the Import File Name.  
+
+3. Incremental. In this mode, the user provides an import file containing transit trip table information (and optionally, person travel information).  STOPS uses this information to develop person trips and transit trips that closely match the input transit trips for the existing scenario.  Forecasts for different years and transit scenarios represent the impact that incremental changes in population, employment, and transit levels-of-service have on transit ridership.
+
+4. Synthetic + Incremental.  This mode is a variation of Mode 2 Special Markets. The difference is the situations in which CTPP JTW flows or special market flows are used. In each case, TAZs which are included in the special market database are identified with a dollar sign in the TAZ name.  The difference occurs in cases where a trip travels between a special zone and a regular zone. If Mode 2 is selected, then trips between a special and non-special zone must be included in the special markets trip database.  If  Mode 4 is selected then trips between a special zone and a regular zone are developed from CTPP data. The former approach is most applicable in cases where a special market survey was conducted covering all origin locations traveling to or from the special activity center (e.g., an airport or university coded with a dollar sign in the TAZ name). The latter approach is applicable when a transit Origin-Destination survey was conducted in a portion of the region but the modeling area needs to be larger to cover the project service area.  In this case, TAZs in the transit survey area are coded with a dollar sign in the TAZ name and TAZs outside of the survey area are coded with a “~” (i.e., not “$”) in the TAZ name." [^1]
+
+[^1]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 52-53.
+
+The application uses the **`r CTPPGeography`** dataset as a basis for estimating trip patterns.
+
+The following table shows the person trip rates per Journey to Work record used by STOPS. It also indicates whether the default values have been changed. "These fields are pre-populated with STOPS defaults for the number of person trips by purpose that are generated for each Census Journey-to-Work record. These default values are based on analyses of the surveys used in the original STOPS calibration.  If better local information exists, the user can enter these values on the parameter screen and STOPS will generate person trips according to this refined local information.  Each time STOPS runs, it checks to see that each of these values lies within the range of 0.001 and 20.  If not, then STOPS resets these trip rates back to the defaults shown in the example." [^2]
+
+[^2]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p.55.
+
+While these rates are important for Synthetic applications, the local transit survey 'drives' the predicted person trips for Incremental STOPS applications.
+
+```{r TripJTW,echo=FALSE, message=FALSE, warning=FALSE}
+
+TripsJTW$defHBW <- DefaultHBW
+TripsJTW$defHBO <- DefaultHBO
+TripsJTW$defNHB <- DefaultNHB
+
+TripsJTW <- mutate(TripsJTW,
+                   DeltaHBW = HBW - defHBW,
+                   DeltaHBO = HBO - defHBO,
+                   DeltaNHB = NHB - defNHB)
+
+df <- select(TripsJTW,Label,defHBW,HBW,DeltaHBW)
+kable(df, col.names = c("Description","Default","This Application","Delta"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(2,ncol(df))),
+      caption = paste0("Comparison of Default and Applied HBW Trips per JTW Record"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+rm(df)
+
+df <- select(TripsJTW,Label,defHBO,HBO,DeltaHBO)
+kable(df, col.names = c("Description","Default","This Application","Delta"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(2,ncol(df))),
+      caption = paste0("Comparison of Default and Applied HBO Trips per JTW Record"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+rm(df)
+
+df <- select(TripsJTW,Label,defNHB,NHB,DeltaNHB)
+kable(df, col.names = c("Description","Default","This Application","Delta"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(2,ncol(df))),
+      caption = paste0("Comparison of Default and Applied NHB Trips per JTW Record"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+rm(df)
+
+```
+
+## 2.2 GTFS Network 
+The following table shows the transit service levels assumed for the existing year and calibration. Work trips are estimated using the peak transit service levels. Non-work trips are estimated using the off-peak transit service levels.
+
+The peak period reflects all transit routes that could conceivably be used for a trip arriving at its destination between 8 and 9 AM. The off-peak period reflects the same data for a trip arriving at its destination between 12 and 1 PM.
+
+```{r 22TransitService,echo=FALSE, message=FALSE, warning=FALSE}
+
+Route.pkt <- select(Route.pk,
+                    Name,ExTrips,ExMiles,ExHours)
+Route.pkt <- adorn_totals(Route.pkt,where="row")
+Route.opt <- select(Route.op,
+                    Name,ExTrips,ExMiles,ExHours)
+Route.opt <- adorn_totals(Route.opt,"row")
+
+df <- union(Route.pkt[nrow(Route.pkt),], Route.opt[nrow(Route.opt),])
+df$Name[1] <- "Peak"
+df$Name[2] <- "Off-peak"
+df$ExSpeed <- df$ExMiles / df$ExHours
+df <- adorn_totals(untabyl(df),"row")
+df$ExSpeed[nrow(df)] <- df$ExMiles[nrow(df)] / df$ExHours[nrow(df)]
+df <- mutate(df,
+             Name = Name,
+             ExTrips = comma(ExTrips),
+             ExMiles = comma(ExMiles,accuracy=1),
+             ExHours = comma(ExHours,accuracy=.1),
+             ExSpeed = comma(ExSpeed,accuracy=.1))
+
+kable(df, col.names = c("Period","Trips","Miles","Hours","Avg Speed"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(1,ncol(df))),
+      caption = paste0("Table 10.03-04: Existing Year Transit Service Levels"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+rm(df)
+
+```
+
+The following tables list the GTFS networks used in this application by alternative.
+
+```{r 22TransitGTFS,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- GTFS[GTFS$Alternative %in% "1-Existing",]
+df <- df[,-1]
+kable(df, col.names = c("#","Location","Date","Day"),
+      align=c('c','l','c','c'),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table: GTFS Network Summary (Existing)"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+df <- GTFS[GTFS$Alternative %in% "2-No Build",]
+df <- df[,-1]
+kable(df, col.names = c("#","Location","Date","Day"),
+      align=c('c','l','c','c'),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table: GTFS Network Summary (No Build)"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+df <- GTFS[GTFS$Alternative %in% "3-Build",]
+df <- df[,-1]
+kable(df, col.names = c("#","Location","Date","Day"),
+      align=c('c','l','c','c'),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table: GTFS Network Summary (Build)"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+rm(df)
+```
+The calendar day selected must be consistent with the count data used in the application. Also, park-ride lots must be manually coded in the PNR.txt file. 
+
+### 2.2.1 Routes
+
+The following table shows the corridor transit service levels. These routes are identified in the "2-keyroutes.csv" input file.
+
+```{r 221TransitService,echo=FALSE, message=FALSE, warning=FALSE}
+
+Route.pkc <- Route.pk[trimws(Route.pk$ID) %in% KeyRoutes$ID,]
+Route.pkc <- mutate(Route.pkc,
+                    ExSpeed = ifelse((ExHours > 0), ExMiles / ExHours, 0))
+                    
+df <- select(Route.pkc,
+             Name, ExTrips, ExMiles, ExHours, ExSpeed)
+df <- mutate(df,
+             ExDist = comma(ExMiles/ExTrips,accuracy=.1),
+             ExTime = comma(ExHours/ExTrips*60,accuracy=.1))
+df <- mutate(df,
+             Name = Name,
+             ExTrips = comma(ExTrips),
+             ExMiles = comma(ExMiles,accuracy=1),
+             ExHours = comma(ExHours,accuracy=.1),
+             ExSpeed = comma(ExSpeed,accuracy=.1))
+
+kable(df, col.names = c("Route Name","Trips","Miles","Hours","Avg Speed","Avg Dist","Avg Time"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(1,ncol(df))),
+      caption = paste0("Table 10.03: Peak Corridor Transit Service Levels for the Existing Year"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+rm(df)
+
+
+Route.opc <- Route.op[trimws(Route.op$ID) %in% KeyRoutes$ID,]
+Route.opc <- mutate(Route.opc,
+                    ExSpeed = ifelse((ExHours > 0), ExMiles / ExHours, 0))
+
+df <- select(Route.opc,
+             Name, ExTrips, ExMiles, ExHours, ExSpeed)
+df <- mutate(df,
+             ExDist = comma(ExMiles/ExTrips,accuracy=.1),
+             ExTime = comma(ExHours/ExTrips*60,accuracy=.1))
+df <- mutate(df,
+             Name = Name,
+             ExTrips = comma(ExTrips),
+             ExMiles = comma(ExMiles,accuracy=1),
+             ExHours = comma(ExHours,accuracy=.1),
+             ExSpeed = comma(ExSpeed,accuracy=.1))
+
+kable(df, col.names = c("Route Name","Trips","Miles","Hours","Avg Speed","Avg Dist","Avg Time"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(1,ncol(df))),
+      caption = paste0("Table 10.04: Off-peak Corridor Transit Service Levels for the Existing Year"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+rm(df)
+
+```
+
+The calendar day selected must be consistent with the count data used in the application. Also, park-ride lots must be manually coded in the PNR.txt file. 
+
+### 2.2.2 GTFS Connectors
+The GTFS connectors setting "determines how access connectors are built in the path-building steps. **The setting for this run is `r WalkConType`**. 
+
+"The default 00 (none selected) or 01 (default) uses the original STOPS approach of building all connectors according to straight-line distances. Option 02 reads a user-provided street file (described in Section 4.3, Walk Shape File) to generate walk connectors.  Option 03 uses MPO skims to develop a better estimate of Kiss-and-Ride and Park-and-Ride travel times.  Option 04 combines Options 02 and 03." [^3]
+
+[^3]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 53.
+
+## 2.3 Tabulation & Calibration Setups
+The TAZs used in this application reflect **`r CTPPGeography`** and subdivided in the corridor to better reflect access to individual stations.
+
+### 2.3.1 Districts
+Districts are aggregated TAZs used for reporting purposes and to calibrate STOPS to local travel patterns. There are `r nrow(District)` districts, with the first `r TopNumDistricts` districts reflecting the corridor: 
+
+>`r unique(District$Label)`. 
+
+
+### 2.3.2 Station Groups
+In a similar way, transit stations are grouped for reporting purposes and to calibrate STOPS to local transit patterns.
+
+There are `r nrow(StationGroup)` station groups:
+
+>`r unique(StationGroup$Label)`
+
+The first `r TopNumStationGroups` groups reflect the corridor:
+
+>`r StationGroup$Label[1:TopNumStationGroups]`
+
+## 2.4 District Map
+
+The following map shows the districts and transit stops (black). If a project has been defined (using NEWSTATION in the STOPSStation.SHP file), the map will also display the project stations (Green=PNR, Red=non-PNR).
+
+```{r 231DistrictMap,echo=FALSE, message=FALSE, warning=FALSE, fig.height=7, fig.width=7}
+
+District_spdf <- readOGR(STOPSDistrictSHPFile,verbose=FALSE)
+District_pal <- colorNumeric("Set3", District_spdf$DISTRICT)
+
+Stations_spdf <- readOGR(STOPSStationSHPFile,verbose=FALSE)
+Stations_spdf$NEWGROUP <- Stations_spdf$NEWSTATION * Stations_spdf$STOPSTYPE
+Stations_spdf$NEWGROUP <- as.numeric(Stations_spdf$NEWSTATION) * as.numeric(Stations_spdf$STOPSTYPE)
+
+Stations_pal <- colorNumeric("Dark2", Stations_spdf$NEWGROUP)
+
+Stations_spdf$NEWSTATION <- as.integer(Stations_spdf$NEWSTATION)
+
+#
+# Map will focus on entire when no project is coded, but will focus on NEWSTATIONs when project is coded
+
+# if (length(unique(Stations_spdf$NEWSTATION))>1) {  
+if (!CalibFlag) {
+  #
+  # Corridor Map
+  if (nrow(Stations_spdf[Stations_spdf$NEWGROUP %in% c(2,4,6,8),]) + nrow(Stations_spdf[Stations_spdf$NEWGROUP %in% c(1,3,5,7),]) == 0) {
+    # No project stations
+    leaflet() %>%
+      addProviderTiles(providers$Esri.WorldImagery, group="ESRI Imagery") %>%
+      addProviderTiles(providers$Esri.NatGeoWorldMap,group="ESRI Map") %>%
+      setView(lng = mean(Stations_spdf$LONGITUDE[Stations_spdf$NEWSTATION==0]), lat = mean(Stations_spdf$LATITUDE[Stations_spdf$NEWSTATION==0]), zoom = 12) %>%
+      addPolygons(
+        data=District_spdf,
+        label = District_spdf$DIST_NAME,
+        labelOptions = labelOptions(noHide = T),
+        fillColor= ~District_pal(DISTRICT),
+        fillOpacity = 0.5,
+        group="Districts",
+        weight=0.5) %>%
+      addCircleMarkers(
+        data = Stations_spdf[Stations_spdf$NEWGROUP==0,], # Non-Project Stations
+        radius = 0.2,
+        color = "black",
+        group="Non-Proj Stops",
+        fillOpacity = 0.3) %>%
+      addLayersControl(
+              baseGroups = c("ESRI Map (default)","ESRI Imagery"),
+              overlayGroups =c("Districts", "Non-Proj Stops", "Proj non-PNR Stations", "Proj PNR Stations"),
+              options = layersControlOptions(collapsed=FALSE)
+              )
+  } else if (nrow(Stations_spdf[Stations_spdf$NEWGROUP %in% c(2,4,6,8),]) == 0 & nrow(Stations_spdf[Stations_spdf$NEWGROUP %in% c(1,3,5,7),]) > 0) {
+    # Project non-PNR stations exist, but no project PNR stations
+    leaflet() %>%
+      addProviderTiles(providers$Esri.WorldImagery, group="ESRI Imagery") %>%
+      addProviderTiles(providers$Esri.NatGeoWorldMap,group="ESRI Map") %>%
+      setView(lng = mean(Stations_spdf$LONGITUDE[Stations_spdf$NEWSTATION==0]), lat = mean(Stations_spdf$LATITUDE[Stations_spdf$NEWSTATION==0]), zoom = 12) %>%
+      addPolygons(
+        data=District_spdf,
+        label = District_spdf$DIST_NAME,
+        labelOptions = labelOptions(noHide = T),
+        fillColor= ~District_pal(DISTRICT),
+        fillOpacity = 0.5,
+        group="Districts",
+        weight=0.5) %>%
+      addCircleMarkers(
+        data = Stations_spdf[Stations_spdf$NEWGROUP==0,], # Non-Project Stations
+        radius = 0.2,
+        color = "black",
+        group="Non-Proj Stops",
+        fillOpacity = 0.3) %>%
+      addCircleMarkers(
+        data = Stations_spdf[Stations_spdf$NEWGROUP %in% c(1,3,5,7),], # Project non-PNR stations
+        label = Stations_spdf$STATION[Stations_spdf$NEWGROUP %in% c(1,3,5,7)],
+        radius = 10,
+        color = "darkred",
+        group="Proj non-PNR Stations",
+        fillOpacity = 1.0) %>%
+      addLayersControl(
+              baseGroups = c("ESRI Map (default)","ESRI Imagery"),
+              overlayGroups =c("Districts", "Non-Proj Stops", "Proj non-PNR Stations", "Proj PNR Stations"),
+              options = layersControlOptions(collapsed=FALSE)
+              )
+
+  } else if (nrow(Stations_spdf[Stations_spdf$NEWGROUP %in% c(2,4,6,8),]) > 0 & nrow(Stations_spdf[Stations_spdf$NEWGROUP %in% c(1,3,5,7),]) == 0) {
+    # Project PNR stations exist, but no project non-PNR stations
+    leaflet() %>%
+      addProviderTiles(providers$Esri.WorldImagery, group="ESRI Imagery") %>%
+      addProviderTiles(providers$Esri.NatGeoWorldMap,group="ESRI Map") %>%
+      setView(lng = mean(Stations_spdf$LONGITUDE[Stations_spdf$NEWSTATION==0]), lat = mean(Stations_spdf$LATITUDE[Stations_spdf$NEWSTATION==0]), zoom = 12) %>%
+      addPolygons(
+        data=District_spdf,
+        label = District_spdf$DIST_NAME,
+        labelOptions = labelOptions(noHide = T),
+        fillColor= ~District_pal(DISTRICT),
+        fillOpacity = 0.5,
+        group="Districts",
+        weight=0.5) %>%
+      addCircleMarkers(
+        data = Stations_spdf[Stations_spdf$NEWGROUP==0,], # Non-Project Stations
+        radius = 0.2,
+        color = "black",
+        group="Non-Proj Stops",
+        fillOpacity = 0.3) %>%
+      addCircleMarkers(
+        data = Stations_spdf[Stations_spdf$NEWGROUP %in% c(2,4,6,8),], # Project PNR stations
+        label = Stations_spdf$STATION[Stations_spdf$NEWGROUP %in% c(2,4,6,8)],
+        radius = 10,
+        color = "darkgreen",
+        group="Proj PNR Stations",
+        fillOpacity = 1.0) %>%
+      addLayersControl(
+              baseGroups = c("ESRI Map (default)","ESRI Imagery"),
+              overlayGroups =c("Districts", "Non-Proj Stops", "Proj non-PNR Stations", "Proj PNR Stations"),
+              options = layersControlOptions(collapsed=FALSE)
+              )
+    
+  } else {
+    # Project PNR and non-PNR stations exist
+    leaflet() %>%
+      addProviderTiles(providers$Esri.WorldImagery, group="ESRI Imagery") %>%
+      addProviderTiles(providers$Esri.NatGeoWorldMap,group="ESRI Map") %>%
+      setView(lng = mean(Stations_spdf$LONGITUDE[Stations_spdf$NEWSTATION==0]), lat = mean(Stations_spdf$LATITUDE[Stations_spdf$NEWSTATION==0]), zoom = 12) %>%
+      addPolygons(
+        data=District_spdf,
+        label = District_spdf$DIST_NAME,
+        labelOptions = labelOptions(noHide = T),
+        fillColor= ~District_pal(DISTRICT),
+        fillOpacity = 0.5,
+        group="Districts",
+        weight=0.5) %>%
+      addCircleMarkers(
+        data = Stations_spdf[Stations_spdf$NEWGROUP==0,], # Non-Project Stations
+        radius = 0.2,
+        color = "black",
+        group="Non-Proj Stops",
+        fillOpacity = 0.3) %>%
+      addCircleMarkers(
+        data = Stations_spdf[Stations_spdf$NEWGROUP %in% c(1,3,5,7),], # Project non-PNR stations
+        label = Stations_spdf$STATION[Stations_spdf$NEWGROUP %in% c(1,3,5,7)],
+        radius = 10,
+        color = "darkred",
+        group="Proj non-PNR Stations",
+        fillOpacity = 1.0) %>%
+      addCircleMarkers(
+        data = Stations_spdf[Stations_spdf$NEWGROUP %in% c(2,4,6,8),], # Project PNR stations
+        label = Stations_spdf$STATION[Stations_spdf$NEWGROUP %in% c(2,4,6,8)],
+        radius = 10,
+        color = "darkgreen",
+        group="Proj PNR Stations",
+        fillOpacity = 1.0) %>%
+      addLayersControl(
+              baseGroups = c("ESRI Map (default)","ESRI Imagery"),
+              overlayGroups =c("Districts", "Non-Proj Stops", "Proj non-PNR Stations", "Proj PNR Stations"),
+              options = layersControlOptions(collapsed=FALSE)
+              )
+  }
+} else {                                           
+  
+  #
+  # Regional Map
+  leaflet() %>%
+    addProviderTiles(providers$Esri.WorldImagery, group="ESRI Imagery") %>%
+    addProviderTiles(providers$Esri.NatGeoWorldMap,group="ESRI Map") %>%
+    setView(lng = mean(Stations_spdf$LONGITUDE), lat = mean(Stations_spdf$LATITUDE), zoom = 12) %>%
+    addPolygons(
+      data=District_spdf,
+      label = District_spdf$DIST_NAME,
+      labelOptions = labelOptions(noHide = T),
+      fillColor= ~District_pal(DISTRICT),
+      fillOpacity = 0.5,
+      group="Districts",
+      weight=0.5) %>%
+    addCircleMarkers(
+      data = Stations_spdf[Stations_spdf$NEWGROUP==0,], # Non-Project Stations
+      radius = 0.2,
+      color = "black",
+      group="Transit Stops",
+      fillOpacity = 0.3) %>%
+    addLayersControl(
+            baseGroups = c("ESRI Map (default)","ESRI Imagery"),
+            overlayGroups =c("Districts", "Transit Stops"),
+            options = layersControlOptions(collapsed=FALSE)
+            )
+
+}
+
+```
+
+
+## 2.5 Population & Employment
+This section summarizes the population/employment information provided by the MPO and/or the region's travel demand model. Four sets of MPO population and employment are provided to STOPS: the CTPP year, existing/current year, the No Build year and the Build year. In some cases, 3 or 4 sets will be identical.
+
+### 2.5.1 Corridor-Level
+The population and employment for the corridor are provided in the following tables. In the first table (Table 12.01a), the first column is the number of workers reported in the CTPP data. The CTPP data includes information on work trips reported by workers, and therefore does not have any direct information on the general population (i.e., workers plus non-workers). As a general rule, CTPP workers are usually half of expected population. The second column is the MPO-reported population for the "CTPP year". For STOPS models using 2006-2010 ACS datasets to estimate travel patterns, the CTPP year is designated as 2008. Providing the MPO population for the CTPP year helps STOPS to scale the growth between the CTPP year, existing and future years. The third column is the population for the existing analysis year (`r BaseYear`).
+
+The second table (Table 12.01b) provides the same information for employment. The first column is employment reported in the CTPP data. The second column is the MPO-reported employment for the "CTPP year". The third column is the employment for the existing analysis year.
+
+```{r CorrPopEmp,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- select(SEData,
+             District,CTPPWorker,CTPPPop,ExPop,NBPop,BPop)
+df <- df[1:TopNumCorridor,]
+df <- adorn_totals(df, "row")
+df <- mutate(df,
+             CTPPWorker = comma(CTPPWorker),
+             CTPPPop = comma(CTPPPop),
+             ExPop = comma(ExPop),
+             NBPop = comma(NBPop),
+             BPop = comma(BPop))
+
+kable(df, col.names = c("District","Workers from CTPP Year","Population (CTPP Year)","Population (Existing Year)",
+                        "Population (No Build Year)","Population (Build Year)"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table 12.01a: Comparison of CTPP & MPO Corridor Population"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+rm(df)
+
+df <- select(SEData,
+             District,CTPPEmployment,CTPPEmp,ExEmp,NBEmp,BEmp)
+df <- df[1:TopNumCorridor,]
+df <- adorn_totals(df, "row")
+df <- mutate(df,
+             CTPPEmployment = comma(CTPPEmployment),
+             CTPPEmp = comma(CTPPEmp),
+             ExEmp = comma(ExEmp),
+             NBEmp = comma(NBEmp),
+             BEmp = comma(BEmp))
+
+kable(df, col.names = c("District","CTPP Employment (CTPP Year)","Employment (CTPP Year)","Employment (Existing Year)",
+                        "Employment (No Build Year)","Employment (Build Year)"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table 12.01b: Comparison of CTPP & MPO Corridor Employment"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+rm(df)
+```
+
+### 2.5.2 Regional-Level
+The regional population and employment are provided by district in the following tables. In the first table (Table 12.01c), the first column is the number of workers reported in the CTPP data. The CTPP data includes information on work trips reported by workers, and therefore does not have any direct information on the general population (i.e., workers plus non-workers). As a general rule, CTPP workers are usually half of expected population. The second column is the MPO-reported population for the "CTPP year". For STOPS models using 2006-2010 ACS datasets to estimate travel patterns, the CTPP year is designated as 2008. Providing the MPO population for the CTPP year helps STOPS to scale the growth between the CTPP year, existing and future years. The third column is the population for the existing analysis year (`r BaseYear`).
+
+The second table (Table 12.01d) provides the same information for employment. The first column is employment reported in the CTPP data. The second column is the MPO-reported employment for the "CTPP year". The third column is the employment for the existing analysis year.
+
+
+```{r CTPPPopEmp,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- select(SEData,
+             District,CTPPWorker,CTPPPop,ExPop,NBPop,BPop)
+df <- adorn_totals(df, "row")
+df <- mutate(df,
+             CTPPWorker = comma(CTPPWorker,accuracy = 1),
+             CTPPPop = comma(CTPPPop,accuracy = 1),
+             ExPop = comma(ExPop,accuracy = 1),
+             NBPop = comma(NBPop,accuracy = 1),
+             BPop = comma(BPop,accuracy = 1))
+
+kable(df, col.names = c("District","Workers from CTPP Year","Population (CTPP Year)","Population (Existing Year)",
+                        "Population (No Build Year)","Population (Build Year)"),
+    align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table 12.01c: Comparison of CTPP & MPO Population"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+rm(df)
+
+df <- select(SEData,
+             District,CTPPEmployment,CTPPEmp,ExEmp,NBEmp,BEmp)
+df <- adorn_totals(df, "row")
+df <- mutate(df,
+             CTPPEmployment = comma(CTPPEmployment,accuracy = 1),
+             CTPPEmp = comma(CTPPEmp,accuracy = 1),
+             ExEmp = comma(ExEmp,accuracy = 1),
+             NBEmp = comma(NBEmp,accuracy = 1),
+             BEmp = comma(BEmp,accuracy = 1))
+
+kable(df, col.names = c("District","CTPP Employment (CTPP Year)","Employment (CTPP Year)","Employment (Existing Year)",
+                        "Employment (No Build Year)","Employment (Build Year)"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table 12.01d: Comparison of CTPP & MPO Employment"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+rm(df)
+
+```
+
+
+## 2.6 Auto Speeds
+This section summarizes the auto speed information provided by the MPO and/or the region's travel demand model. District-to-district auto speeds should reasonably reflect actual and/or expected conditions. The district-to-district average auto speeds provided to STOPS are shown in the following table. If there are no CTPP trips between D2D pairs then STOPS will give zero in that table. Please be aware that in this report only STOPS automatically creates an "Other" category to reference zones not identified as part of a district. Cells in the lists below with "Other" can be ignored. Also, please note that this automatically generated "Other" category is not the same "Other" in the D2D trip tables shown in later parts of this report.
+
+```{r 25AutoSpeeds,echo=FALSE, message=FALSE, warning=FALSE}
+
+autospd.mat <- OrganizeMat2(HighwaySpeed.mat,RowSortList.nt,ColSortList.nt,TopNumDistricts,TRUE,FALSE)
+WriteMatrix(autospd.mat,1,"Table 13.07: Intra-Corridor Auto Speeds")
+
+# Low/High speeds
+HighSpeed <- vector()
+LowSpeed <- vector()
+ZeroSpeed <- vector()
+
+for (i in (1:nrow(HighwaySpeed.mat))) {
+  for (j in (1:ncol(HighwaySpeed.mat))) {
+    if (HighwaySpeed.mat[i,j] > 45) {
+      HighSpeed <- append(HighSpeed, paste0(rownames(HighwaySpeed.mat)[i],"-",colnames(HighwaySpeed.mat)[j]))
+    } else if (HighwaySpeed.mat[i,j] == 0) {
+      ZeroSpeed <- append(ZeroSpeed, paste0(rownames(HighwaySpeed.mat)[i],"-",colnames(HighwaySpeed.mat)[j]))
+    } else if (HighwaySpeed.mat[i,j] < 5) {
+      LowSpeed <- append(LowSpeed, paste0(rownames(HighwaySpeed.mat)[i],"-",colnames(HighwaySpeed.mat)[j]))
+    }
+  }
+}
+
+```
+
+Regionally, there are **`r length(HighwaySpeed.mat[HighwaySpeed.mat < 5 & HighwaySpeed.mat > 0])`** district-to-district cells with a highway speed less than 5 mph.
+
+> `r LowSpeed`. 
+
+Regionally, there are **`r length(HighwaySpeed.mat[HighwaySpeed.mat > 55])`** district-to-district cells with a highway speed greater than 55 mph.
+
+> `r HighSpeed`. 
+
+A large number of cells with speeds in the above two categories may indicate an improperly formatted auto travel time CSV file, or issues with the modeled auto speeds.
+
+Regionally, there are **`r length(HighwaySpeed.mat[HighwaySpeed.mat == 0])`** district-to-district cells with no highway speed. If there are no CTPP trips between D2D pairs then STOPS will give zero in that table. 
+
+> `r ZeroSpeed`. 
+
+All of the above values reflect an Auto Time Constant value of **`r format(AutoTimeConstant,nsmall=2)`** (default value is 0.0) and an Auto Time Factor value of **`r format(AutoTimeFactor,nsmall=2)`** (default value is 1.0). This constant and factor adjust the MPO auto travel times to better reflect actual travel times as reported by way-finding web applications such as Google. This adjustment is critical to the accurate representation of PNR markets and ridership. 
+
+"Adjusted highway times are estimated with the following equation: 
+Adjusted_Highway_Time = a + b × MPO_Highway_Time
+The Auto Time Constant is the additive portion of the adjustment (i.e., “a”). The Auto Time Constant defaults to 0.0 minutes (no adjustment) and must be in the range between -10.0 and +10.0 minutes). The Auto Time Factor is the multiplicative portion of the adjustment (i.e., “b”). The Auto Time Factor defaults to 1.0 (no adjustment) and must be in the range between 0.5 and 2.0)." [^4] 
+
+[^4]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 60.
+
+## 2.7 Demand Data
+
+### 2.7.1 Consistency of Ridership Information
+STOPS requires observed ridership information in different forms: APC data (stop-level), route-level boardings and target systemwide unlinked trips (system-level). Ridership levels should be consistent across all three levels (stop-, route- and system-levels). An example of an explainable difference is when one system provides APC data and another system in the region is  unable to provide APC data. Unexplained differences in ridership may cause unstable results. For this model, the total stop-level boardings is **`r scales::comma(StationBoardings)`**, the total route-level boardings is **`r scales::comma(RouteBoardings)`**, and the target systemwide unlinked trips is **`r scales::comma(TargetBoardings)`**.
+
+Differences in ridership less than 5% are acceptable, but smaller differences are preferable. Larger differences, 10+%, are unacceptable and should be reconciled.
+
+For incremental models, ridership must reflect a time period during the survey fieldwork and the selected service day must reflect a day within this time period also.
+
+### 2.7.2 Transit Trip Targets
+"If a local survey is available, the user can code linked transit person trip targets by purpose or by auto ownership level for the calibration year.  If this information is coded, STOPS calibrates the mode choice model for each purpose and auto ownership level to match these person-trip targets.  If these values are not coded, STOPS generates its own estimate of transit linked trips based on the unlinked trip targets entered on the “Define Forecast Years” dialog. STOPS then proceeds with the calibration as above." [^5]
+
+[^5]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 55.
+
+The total number of user-specified unlinked and linked trips are **`r comma(UnlinkedTripTarget)`** and **`r comma(LinkedTrips$Trips[13])`**. The resulting transfer rate is **`r percent(UnlinkedTripTarget/LinkedTrips$Trips[13]-1)`**.
+
+```{r LinkTripGoal,echo=FALSE, message=FALSE, warning=FALSE}
+df <- LinkedTrips
+df <- mutate(df,
+             Label = Label,
+             Trips = comma(Trips))
+kable(df, col.names = c("Description","Trips"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("User-Specific Linked Trips by Purpose & Auto Ownership"),
+      row.names= TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+rm(df)
+```
+
+The ratio of Unlinked to Linked Transit Trips is applied when the STOPS mode is Synthetic. "This parameter controls how STOPS estimates the regional linked transit trip targets if the purpose- and auto ownership-specific linked transit trips described above are not entered.  This ratio must be between the values of 1.0 and 2.0 and defaults to 1.4. If linked trip targets are not specified for each purpose, then the regional number of unlinked transit trips (entered in Step 4) are divided by this ratio to generate an estimate of linked trips as part of the mode choice model calibration process in the STOPS phase of Step 11." [^6]
+
+[^6]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 57.
+
+
+# 3.0 Existing Conditions & Calibration Results
+
+"STOPS is designed to simplify the process of developing and applying travel 
+forecasting procedures while maintaining much of the internal sophistication of 
+regional travel forecasting models. Nevertheless, there are still a number of 
+implementation and application steps that must be followed to successfully use 
+STOPS to estimate fixed guideway transit ridership." [^7]
+
+[^7]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 23.
+
+
+## 3.1 Calibration Settings
+
+### 3.1.1 CTPP and Station Group Calibration Settings
+The CTPP calibration approach for this application is **`r CTPPCalibration`** (default is attraction districts only). "By default, STOPS calibrates itself to match district-level transit shares from the CTPP for each attraction district.  The default calibration approach does not force STOPS to match production district shares since this might unrealistically constrain STOPS in rapidly growing regions where the nature of outlying (typically more residential) areas change rapidly.  Many projects, however, are in more stable areas where the nature of travel is less likely to change (except in response to the project, itself).  In such cases, this field allows the user to select option 2 – Production and Attraction calibration.  Otherwise, either option 0 (none selected) or option 1 (Attraction District Only) will cause STOPS to apply the default approach of calibrating to Attraction Districts only." [^8] 
+
+[^8]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 57.
+
+
+The Station Group calibration setting for this application is **`r GroupCalibration`** (default is 0). "STOPS has the option of reading station/stop- or route-level count data and using this information to refine the model calibration. This parameter allows the user to select the calibration approach.  Options include: 
+
+- 00, None Selected (Default and recommended for the initial STOPS run) this run does not do any group calibration. 
+- 01, No Group Calibration (same as option 00) 
+- 06, 07, 08 and 09 are depreciated.
+- 10, OD Adjustment (Recommended after initial STOPS Run is complete in cases where full bus and fixed guideway stop/station count data are available) This option adjusts the person OD trip table based on a comparison of modeled and observed stop/station group ridership. 
+- 11, OD Adjustment Route (Recommended after initial STOPS Run is complete in cases where full bus and fixed guideway stop/station count data are NOT available) This option adjusts the person OD trip table based on a comparison of modeled and observed route-level ridership. 
+- 12, OD Adjustment Route and Stop (Recommended after initial STOPS Run is complete in cases where full bus and fixed guideway stop/station count data are available but route level ridership results still require adjustment) This option adjusts the person OD trip table based on a comparison of modeled and observed stop/station group ridership and route level ridership." [^9]
+
+[^9]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 57-58.
+
+### 3.1.2 Fixed-Guideway Settings (FGS)
+In this application, the Partial Fixed-Guideway Setting (for route type = 0) is **`r format(FGS.Project,nsmall=2)`**, while the Full Fixed-Guideway setting (for route type != 0) is **`r format(FGS.Other,nsmall=2)`**. These values range from 0 to 1, which 0 providing no impact from fixed-guideway effects and 1 providing the full amount of fixed-guideway effects. 
+
+"STOPS employs several mechanisms to represent the fact that fixed guideway systems can attract higher levels of ridership than would be predicted on the basis of its service characteristics alone.  This higher level of ridership occurs because fixed guideway systems are often more visible to occasional travelers, may be more reliable, and may offer important amenities such as protection from the weather while waiting.  Within STOPS, all of these factors are combined into a single parameter (the “setting,” known in earlier versions of STOPS as the “visibility factor”) that was calibrated using survey results from several cities across the United States.  Two settings are available: one for full fixed guideway facilities such as LRT, commuter rail, and rail rapid transit, and a second for partial fixed guideway systems such as streetcars and some BRT lines.  STOPS distinguishes partial fixed guideway systems from full fixed guideway systems based on the route_type field coded in the GTFS schedule files (in the file routes.txt).  Partial fixed guideway systems are coded with route_type equal to zero.  Full fixed guideway systems are coded with a route_type equal to 1, 2, 4, 5, 6, or 7. (The remaining route_type is 3 is bus which is not considered by STOPS to be a fixed guideway mode. The value coded for the fixed guideway setting defines the proportion of the fixed guideway benefit to apply. In most regions, the following FG settings should be used: 
+
+A) Full Fixed Guideway (most LRT, commuter rail and heavy rail systems): 1.0  
+
+B) Partial Fixed Guideway: 
+    i)   If partial fixed guideway applies to BRT: 0.1 
+    ii)  If partial fixed guideway applies to streetcar: 0.3 
+    iii) If partial fixed guideway applies to both BRT and streetcar, contact FTA staff for assistance. 
+
+In metropolitan areas with existing fixed guideway services, the Fixed Guideway settings above can be confirmed by: 
+
+1. Running STOPS with Group Calibration turned off (i.e., set the Group Calibration Approach to 0 as described below). 
+
+2. Comparing modeled fixed guideway ridership to counted fixed guideway ridership. 
+
+3. Confirming that any mismatches are not the result of large zones, data errors, or other modeling problems. 
+
+4. Adjusting fixed guideway settings to improve the correspondence between modeled and actual ridership. 
+
+Note that the recommended fixed guideway settings have worked well in forecasting BRT, streetcar and LRT ridership in a wide range of situations. Adjustments to the default values will be closely reviewed during FTA project reviews to confirm that higher values are truly warranted rather than being a means to correct to some other problem in the STOPS application." [^10]
+
+[^10]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 55-56.
+
+## 3.2 Regional Adjustment Factor & Unlinked Trips
+The number of observed unlinked trips is **`r scales::comma(TargetBoardings)`**, and the number of unlinked trips from the input trip table is **`r scales::comma(UnlinkedTripTarget)`**. (The latter number will be zero if the STOPS application was run in Synthetic Mode.) 
+
+The raw (unadjusted) unlinked trips is **`r scales::comma(RawBoardings)`**, resulting in a regional calibration factor of **`r format(RegCalib,nsmall=2)`** (the ratio of observed to raw unlinked trips). The acceptable range for the regional calibration factor is 0.97-1.03, but the preferred range is 0.99-1.01. Values outside these ranges likely require further calibration adjustments.
+
+## 3.3 Linked Trips 
+
+### 3.3.1 By Trip Purpose
+The STOPS application should produce linked trips by purpose within a couple of percentage points of the observed values.
+
+```{r 341ByTripPurpose,echo=FALSE, message=FALSE, warning=FALSE}
+
+LinkedTrip.Purp <- data.frame(
+	Label = c("HBW","HBO","NHB","Total"),
+	Existing = rep(0,4),
+	Existing.Pct = rep(0,4),
+	Observed = rep(0,4),
+	Observed.Pct = rep(0,4),
+	Delta = rep(0,4),
+	Delta.Pct = rep(0,4))
+
+LinkedTrip.Purp <- mutate(LinkedTrip.Purp,
+	Existing = c(sum(Table9301.mat),sum(Table17701.mat),sum(Table26101.mat),
+		sum(Table9301.mat)+sum(Table17701.mat)+sum(Table26101.mat)),
+	Observed = c(LinkedTrips$Trips[4],LinkedTrips$Trips[8], LinkedTrips$Trips[12],LinkedTrips$Trips[13]),
+	Delta = Existing - Observed)
+
+for (i in 1:4) {
+	LinkedTrip.Purp$Existing.Pct[i] <- LinkedTrip.Purp$Existing[i] / LinkedTrip.Purp$Existing[4]
+	LinkedTrip.Purp$Observed.Pct[i] <- LinkedTrip.Purp$Observed[i] / LinkedTrip.Purp$Observed[4]
+	LinkedTrip.Purp$Delta.Pct[i] <- LinkedTrip.Purp$Existing.Pct[i] - LinkedTrip.Purp$Observed.Pct[i]
+}
+
+LinkedTrip.Purp <- mutate(LinkedTrip.Purp,
+                          Existing = comma(Existing),
+                          Existing.Pct = percent(Existing.Pct,accuracy = 1),
+                          Observed = comma(Observed),
+                          Observed.Pct = percent(Observed.Pct,accuracy = 1),
+                          Delta = comma(Delta),
+                          Delta.Pct = percent(Delta.Pct,accuracy = 1))
+
+kable(LinkedTrip.Purp, col.names = c("Description","Estimated Trips","Pct","Observed Trips","Pct","Delta","Delta Pct"),
+      align=c('l',rep('r',(ncol(LinkedTrip.Purp)-1))),
+      digits=c(0,0,2,0,2,0,2),
+      caption = paste0("Linked Trips by Purpose"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+```
+
+### 3.3.2 By Auto Ownership
+The STOPS application should produce linked trips by auto ownership within a couple of percentage points of the observed values. A high proportion of 0-car HHs and concentrations of 0-car HHs in certain districts may indicate the need to constrain CTPP shares to both production and attraction districts
+
+```{r 342ByAutoOwnership,echo=FALSE, message=FALSE, warning=FALSE}
+
+LinkedTrip.Auto <- data.frame(
+	Label = c("0-car HH","1-car HH","2+car HH","Total"),
+	Existing = rep(0,4),
+	Existing.Pct = rep(0,4),
+	Observed = rep(0,4),
+	Observed.Pct = rep(0,4),
+	Delta = rep(0,4),
+	Delta.Pct = rep(0,4))
+
+LinkedTrip.Auto <- mutate(LinkedTrip.Auto,
+	Existing = c(sum(Table28201.mat), sum(Table30301.mat), sum(Table32401.mat), sum(Table34501.mat)),
+	Observed = c(LinkedTrips$Trips[1]+LinkedTrips$Trips[5]+LinkedTrips$Trips[9],
+	             LinkedTrips$Trips[2]+LinkedTrips$Trips[6]+LinkedTrips$Trips[10],
+	             LinkedTrips$Trips[3]+LinkedTrips$Trips[7]+LinkedTrips$Trips[11],
+	             LinkedTrips$Trips[13]),
+	Delta = Existing - Observed)
+
+for (i in 1:4) {
+  LinkedTrip.Auto$Existing.Pct[i] <- LinkedTrip.Auto$Existing[i] / LinkedTrip.Auto$Existing[4]
+	LinkedTrip.Auto$Observed.Pct[i] <- LinkedTrip.Auto$Observed[i] / LinkedTrip.Auto$Observed[4]
+	LinkedTrip.Auto$Delta.Pct[i] <- LinkedTrip.Auto$Existing.Pct[i] - LinkedTrip.Auto$Observed.Pct[i]
+}
+
+LinkedTrip.Auto <- mutate(LinkedTrip.Auto,
+                          Existing = comma(Existing),
+                          Existing.Pct = percent(Existing.Pct,accuracy = 1),
+                          Observed = comma(Observed),
+                          Observed.Pct = percent(Observed.Pct,accuracy = 1),
+                          Delta = comma(Delta),
+                          Delta.Pct = percent(Delta.Pct,accuracy = 1))
+
+kable(LinkedTrip.Auto, col.names = c("Description","Estimated Trips","Pct","Observed Trips","Pct","Delta","Delta Pct"),
+      align=c('l',rep('r',(ncol(LinkedTrip.Auto)-1))),
+      digits=c(0,0,2,0,2,0,2),
+      caption = paste0("Linked Trips by Auto Ownership"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+```
+
+## 3.4 District-to-District (D2D) Flows
+
+```{r 35Total,echo=FALSE, message=FALSE, warning=FALSE}
+
+# Reference note:
+# TableXXXX.mat matrices have D2D figures directly from STOPs report...no total row/column
+# TableXXXX matrices have D2D figures directly from STOPs report...with total row/column
+# TableXXXX.out reflect condensed D2D figures reflecting RowSortList & ColSortList...with total row/column
+
+Table34501.out <- OrganizeMat(Table34501.mat,RowSortList.nt,ColSortList.nt,TopNumDistricts)
+WriteMatrix(Table34501.out,1,"Table 345.01: Existing Transit Trips")
+
+```
+
+There are `r scales::comma(sum(Table34501.out[1:TopNumCorridor,1:TopNumCorridor]))` intra-corridor trips (`r scales::percent(sum(Table34501.out[1:TopNumCorridor,1:TopNumCorridor])/Table34501.out[nrow(Table34501.out),nrow(Table34501.out)])` of total), `r scales::comma(sum(Table34501.out[1:TopNumCorridor,(TopNumCorridor+1):(nrow(Table34501.out)-1)]))` corridor to outside corridor trips (`r (scales::percent(sum(Table34501.out[1:TopNumCorridor,(TopNumCorridor+1):(nrow(Table34501.out)-1)])/Table34501.out[nrow(Table34501.out),nrow(Table34501.out)]))`), `r scales::comma(sum(Table34501.out[(TopNumCorridor+1):(nrow(Table34501.out)-1),1:TopNumCorridor]))` outside corridor to inside corridor trips (`r scales::percent(sum(Table34501.out[(TopNumCorridor+1):(nrow(Table34501.out)-1),1:TopNumCorridor])/Table34501.out[nrow(Table34501.out),nrow(Table34501.out)])`), and `r scales::comma(sum(Table34501.out[(TopNumCorridor+1):(nrow(Table34501.out)-1),(TopNumCorridor+1):(nrow(Table34501.out)-1)]))` trips traveling outside the corridor (`r scales::percent(sum(Table34501.out[(TopNumCorridor+1):(nrow(Table34501.out)-1),(TopNumCorridor+1):(nrow(Table34501.out)-1)])/Table34501.out[nrow(Table34501.out),nrow(Table34501.out)])`).
+
+## 3.5 Linked Trips By Mode of Access
+```{r 36ByAccessMode,echo=FALSE, message=FALSE, warning=FALSE}
+
+LinkedTrip.Access <- data.frame(
+	Label = c("Walk","KNR","PNR","Total"),
+	Existing = rep(0,4),
+	Existing.Pct = rep(0,4),
+	Observed = c(ObsSurvey2,LinkedTrips$Trips[13]), ## FROM SURVEY TABULATION
+	Observed.Pct = rep(0,4),
+	Delta = rep(0,4),
+	Delta.Pct = rep(0,4))
+
+LinkedTrip.Access <- mutate(LinkedTrip.Access,
+	Existing = c(sum(Table34201.mat),sum(Table34301.mat),sum(Table34401.mat),sum(Table34501.mat)),
+	Delta = Existing - Observed)
+
+for (i in 1:4) {
+	LinkedTrip.Access$Existing.Pct[i] <- 	LinkedTrip.Access$Existing[i] / LinkedTrip.Access$Existing[4]
+	LinkedTrip.Access$Observed.Pct[i] <- 	LinkedTrip.Access$Observed[i] / LinkedTrip.Access$Observed[4]
+	LinkedTrip.Access$Delta.Pct[i] <- 	LinkedTrip.Access$Existing.Pct[i] - LinkedTrip.Access$Observed.Pct[i]
+}
+
+LinkedTrip.Access <- mutate(LinkedTrip.Access,
+                          Existing = comma(Existing),
+                          Existing.Pct = percent(Existing.Pct,accuracy = 1),
+                          Observed = comma(Observed),
+                          Observed.Pct = percent(Observed.Pct,accuracy = 1),
+                          Delta = comma(Delta),
+                          Delta.Pct = percent(Delta.Pct,accuracy = 1))
+
+kable(LinkedTrip.Access, col.names = c("Description","Estimated Trips","Pct","Observed Trips","Pct","Delta","Delta Pct"),
+      align=c('l',rep('r',(ncol(LinkedTrip.Access)-1))),
+      digits=c(0,0,2,0,2,0,2),
+      caption = paste0("Linked Trips by Mode of Access"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+```
+
+The walk weight factor is **`r format(WalkWeight,nsmall=2)`** (default value is 1.0). "The walk weight setting is multiplied by 1.5 to generate the estimate of perceived impedance of each minute of walking as compared to time spent traveling in a transit vehicle. A walk weight setting of 1.0 (the default) results in walking being 1.5 times as onerous as riding in a bus.  Setting this parameter of 0.67 means that each minute of walking is equivalent to 1.0 minutes of riding in a bus (i.e., 1.5 x 0.67). Setting this parameter to 2.0 means that each minute of walking is equivalent to 3.0 minutes of riding in a bus (i.e., 1.5 x 2.0). The resulting weight on walk time is used during both the path-finding and mode choice steps in STOPS. " [^11]
+
+[^11]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 59.
+
+The KNR transit factor is **`r format(KNRTransit,nsmall=2)`** (default value is 1.0). "The KNR Transit Setting affects how much of the nationally-calibrated KNR constants are applied to KNR trips in the mode choice element of STOPS.  The default for the KNR Transit Setting is 1.0 which uses the nationally-calibrated constants without adjustment.  To increase KNR usage, set the KNR Transit Setting to a value greater than 1.  The upper limit on this setting is 2.0, which multiplies the KNR constants by 0.25. This has the effect of reducing absolute value of these negative constants and increasing transit KNR usage.  The lower limit on this setting is 0.0, which multiples the KNR constants by 1.75.  This is the effect of increasing the absolute value of these negative constants and decreasing KNR usage."  [^12]
+
+[^12]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 59.
+
+The PNR transit factor is **`r format(PNRTransit,nsmall=2)`** (default value is 1.0). "This parameter is operational only when the more detailed PNR Settings are left unadjusted. When the PNR settings developed for v2.51 are unspecified, then the PNR Density Factor scales the nationally-calibrated effect of employment density on PNR utilization up or down. This parameter affects the mode choice model only. If the PNR Density is set to 1.0, then the national-calibrated impact of density on PNR usage is applied with out modification.  A value of 2 (the upper limit of this parameter) doubles the effect and a value of 0.5 (the lower limit) reduces the effect of density on PNR usage by 50 percent.  Note that the PNR density applies to all types of PNR usage (i.e., fixed-guideway only, fixed-guideway and bus, and bus only)." [^13]
+
+[^13]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 59-60.
+
+The PNR bus factor is **`r format(PNRBus,nsmall=2)`** (default value is 1.0). "The PNR Bus Penalty Setting scales the nationally-calibrated PNR-to-bus constants up or down.  If a value of 1.0 is used, then the nationally-calibrated PNR-to-bus constants are used. When the PNR Bus setting is greater than zero, then the magnitude of the constants is increased. These constants are negative so the result is fewer PNR-to-bus trips.  Conversely, a PNR Bus setting that is less than zero will increase PNR-to-bus trips. The PNR Bus Penalty Setting must be between 0 and 2.0. " [^14]
+
+[^14]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 60.
+
+## 3.6 Systemwide Transfer Rate
+The estimated transfer rate is **`r scales::percent(Modeled.XferRate)`**. This rate should be within two percentage points of the observed transfer rate, **`r scales::percent(ObservedXferRate)`**. If the STOPS mode is Incremental, the observed transfer rate is computed by dividing the number of unlinked trips by the total linked trip goals.
+
+The boarding penalty is **`r format(BoardingPen,nsmall=1)`** minutes (default is 5 minutes). This penalty must be between 0 and 10 minutes. Values of 0-1 and 9-10 may indicate auxiliary issues with the calibration."This parameter allows the user to specify how much of the nationally-calibrated boarding penalty to apply in the particular case being modeled.  This value can range from 0 to 2 with a default of 1.0.  When this parameter is 1, the full boarding penalty (5 minutes) is applied during path building.  When the value is 0.5, only 50 percent of the penalty is applied.  The first time that STOPS is run in a new area, this parameter should be set to 1.0.  As initial runs are made, the modeled ratio of unlinked-to-linked trips should be compared to local information from surveys or farebox registers.  The penalty should be increased if the unlinked-to-linked trip ratio is too high (i.e., too many transfers).  The penalty should be decreased if this ratio is too low." [^15]
+
+[^15]: "Simplified Trips on Project Software User Guide Version 2.52-2.53". February 28, 2024 edition. Federal Transit Administration. p. 55.
+
+## 3.7 Modal Shares (Overall)
+
+```{r FGShare1,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- TripBreakdown %>% 
+				filter(Purpose %in% "Total" & AutoOwn %in% "All HH" & Access %in% "All Access") %>% 
+				group_by(Submode) %>%
+				select(Submode, ExistModel, ExistSurvey, ExistDelta)
+
+df$ExistSurvey <- ObsSurvey1
+
+```
+
+The estimated fixed-guideway share is **`r scales::percent(1 - (Table34101[nrow(Table34101),ncol(Table34101)]/Table34501[nrow(Table34501),ncol(Table34501)]))`**. This rate should be within two percentage points of the observed fixed-guideway share, **`r scales::percent(ObservedFGShare)`**.
+
+```{r FGShare2,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- mutate(df,
+             ExistDelta = comma(ExistModel-ExistSurvey),
+             ExistModel = comma(ExistModel),
+             ExistSurvey = comma(ExistSurvey))  ## NEED FROM SURVEY TABULATION
+             
+kable(df, col.names = c("Modes Used","Estimated Trips","Observed Trips","Delta"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Linked Trips by Mode"),
+      row.names= FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+```
+
+## 3.8 Station Group Calibration Factors
+Large adjustments (factors approaching 0.2 (low) or 5.0(high)) may indicate the presence of an underlying problem that should be corrected:
+
+- Problems in the CTPP data (geo-coding, representativeness, sample expansion)
+
+- Special markets that are present in the counts but not in the input estimates of travel demand
+
+- Problems with the representation of transit supply
+
+- Problems with the count data – in this case “data”
+
+Large adjustments may distort estimates of project ridership; better to address underlying problems rather than to deploy this as a “hammer”.
+
+The following charts compare the counts with boardings prior to adjustment. This provides a sense of the adjustment impact the factors have. Station groups that are within or close to the +/- 20% thresholds are fine. Concern increases proportionally as they move further away from the +/- 20% thresholds, so station groups with adjustments outside +/- 20% are highlighted in this section for additional scrutiny. The factors should be approximately equivalent to the equation:
+
+$AdjustmentFactor=\frac{BoardingsPriorToAdjustment}{Counts}$
+
+And so the last column values provide a reasonable estimate of the adjustment factors. Special attention should be given to factors that approach 0.2 or 5.0 and have a meaningful number of trips (2,000+) and located near the corridor.
+
+```{r SGFactors,echo=FALSE, message=FALSE, warning=FALSE}
+
+# Corridor, No Labels
+SG.tmp <- SG.prod[SG.prod$Corridor==1,]
+ggplot(SG.tmp) +
+  geom_point(aes(x=Count,y=Trips,label=Label),color="red",size=3) +
+  scale_x_continuous(labels=comma) +
+  scale_y_continuous(labels=comma) +
+  geom_abline(intercept = 0, slope = 1.0, linetype='solid',color='black') +
+  geom_abline(intercept = 0, slope = 1.2, linetype='longdash',color='black') +
+  geom_abline(intercept = 0, slope = 0.8, linetype='longdash',color='black') +
+  theme_light() +
+  labs(
+  title = paste("Comparison of Corridor Station Group Boardings to Counts (from Table 2.04)"),
+  subtitle = paste("Boardings inside lines are within 20% of count"),
+  x = "Count",
+  y = "Boardings Prior to Adjustment"
+  ) 
+
+df <- filter(SG.tmp, (abs((Count-Trips)/Count) > 0.2)) %>%
+  select(Label,Trips,Count) %>%
+  mutate(Delta = comma(Trips - Count,accuracy=1),
+         EstFactor = comma(Count / Trips,accuracy = 0.001)) %>%
+  mutate(Trips = comma(Trips,accuracy=1),
+         Count = comma(Count,accuracy=1))
+
+kable(df, col.names = c("District","Trips","Count","Delta","Est Adjmt Factor"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(0,ncol(df)-1),3),
+      caption = paste0("Corridor Station Groups with Differences > 20%"),
+      row.names= TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+# Non-Corridor
+SG.tmp <- SG.prod[SG.prod$Corridor==2,]
+ggplot(SG.tmp) +
+  geom_point(aes(x=Count,y=Trips),color="blue",size=3) +
+  scale_x_continuous(labels=comma) +
+  scale_y_continuous(labels=comma) +
+  geom_abline(intercept = 0, slope = 1.0, linetype='solid',color='black') +
+  geom_abline(intercept = 0, slope = 1.2, linetype='longdash',color='black') +
+  geom_abline(intercept = 0, slope = 0.8, linetype='longdash',color='black') +
+  theme_light() +
+  labs(
+  title = paste("Comparison of Non-Corridor Station Group Boardings to Counts (from Table 2.04)"),
+  subtitle = paste("Boardings inside lines are within 20% of count"),
+  x = "Count",
+  y = "Boardings Prior to Adjustment"
+  ) 
+
+df <- filter(SG.tmp, (abs((Count-Trips)/Count) > 0.2)) %>%
+  select(Label,Trips,Count) %>%
+  mutate(Delta = comma(Trips - Count,accuracy=1),
+         EstFactor = comma(Count / Trips,accuracy=0.001)) %>%
+  mutate(Trips = comma(Trips,accuracy=1),
+         Count = comma(Count,accuracy=1))
+
+kable(df, col.names = c("District","Trips","Count","Delta","Est Adjmt Factor"),
+      align=c('l',rep('r',(ncol(df)-1))),
+      digits=c(rep(0,ncol(df)-1),3),
+      caption = paste0("Non-Corridor Station Groups with Differences > 20%"),
+      row.names= TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+```
+
+## 3.9 Corridor Route-Level Boardings
+The following table provides route-level counts and existing year estimated volumes for routes in the corridor. Large differences should be identified and the coding reviewed for accuracy.
+
+```{r RouteBoarding1,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- select(RouteBoarding, ID, Name, Count, ExistWalk, ExistKNR, ExistPNR, ExistTotal, ExistDelta)
+df <- filter(df, (trimws(df$ID) %in% KeyRoutes$ID))
+df <- mutate(df,
+             ExistDelta = comma(ExistDelta,accuracy=1),
+             Count = comma(Count,accuracy=1),
+             ExistTotal = comma(ExistTotal,accuracy=1),
+             ExistWalk = comma(ExistWalk,accuracy=1),
+             ExistKNR = comma(ExistKNR,accuracy=1),
+             ExistPNR = comma(ExistPNR,accuracy=1))
+
+kable(df, col.names = c("ID", "Route","Count","Walk","KNR","PNR","Total","Delta"),
+      align=c('l','l',rep('r',(ncol(df)-2))),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table 10.01: Comparison of Route-level Counts and Existing Year Volumes"),
+      row.names= TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+rm(df)
+
+```
+
+## 3.10 Mode of Access at Stations
+The following table provides station-level existing year estimated volumes - by mode of access - for user-identified stops and stations in the corridor. A search box is provided for quicker identification. The mode of access volumes should approximate existing conditions.
+
+```{r StopBoarding2,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- select(StopBoarding,ID,Name,ExistTotal,ExistWalk,ExistKNR,ExistPNR,ExistXfer)
+df <- mutate(df,
+             ExistTotal = ExistTotal,
+             ExistWalk = ExistWalk,
+             ExistKNR = ExistKNR,
+             ExistPNR = ExistPNR,
+             ExistXfer = ExistXfer)
+df <- df[trimws(df$ID) %in% KeyStops$ID,]
+
+reactable(df,
+          searchable = TRUE,
+          bordered = TRUE,
+          highlight = TRUE,
+          minRows = 10,
+          showPageSizeOptions = TRUE, 
+          columns = list(
+            ID = colDef(name = "ID", align = "left"),
+            Name = colDef(name = "Stop Name", align="left"),
+            ExistTotal = colDef(name="No Build", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistWalk = colDef(name="Walk", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistKNR = colDef(name="KNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistPNR = colDef(name="PNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistXfer = colDef(name="Xfer", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0))
+          ))
+
+rm(df)
+
+```
+
+
+# 4.0 No-Build Assumptions & Results
+The purpose of this section is to provide the necessary information to confirm the plausibility of the No-Build predictions given the assumed changes in transit supply and demographic assumptions..
+
+We evaluate the ridership responses in the mode of access at stations, changes in total transit trip flows, change in route ridership, and the consistency between changes in supply with ridership responses. Separately we analyze the consistency with peer projects, both local and with other metro areas.
+
+## 4.1 Changes in Assumptions
+
+### 4.1.1 Population & Employment
+The following table shows all districts with a non-zero difference in population or employment between the existing year and No-Build alternatives. 
+
+```{r Table1201Popc,echo=FALSE, message=FALSE, warning=FALSE}
+
+SEData <- mutate(SEData,
+                 ExNoBPop = NBPop - ExPop,
+                 NoBBldPop = BPop - NBPop,
+                 ExNoBEmp = NBEmp - ExEmp,
+                 NoBBldEmp = BEmp - NBEmp
+            )
+
+df <- select(SEData,
+             District,ExNoBPop,ExNoBEmp)
+
+df <- filter(df,
+             (ExNoBPop != 0) | (ExNoBEmp !=0))
+
+if (nrow(df)==0) {
+  print("No change in the population & employment data between the No-Build and Existing alternatives.")
+} else {
+  df <- adorn_totals(df, "row")
+  kable(df, col.names = c("District","Population","Employment"),
+        align=c('l',rep('r',(ncol(df)-1))),
+        digits=c(rep(0,ncol(df))),
+        caption = paste0("Table 12.01: Incremental Changes in Population/Employment (No-Build minus Existing)"),
+        row.names= FALSE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover")) 
+}
+
+rm(df)
+```
+
+### 4.1.2 Changes in Auto Speeds
+```{r ExNoBupply,echo=FALSE, message=FALSE, warning=FALSE}
+
+Table1308.1307.mat <- Table1308.mat - HighwaySpeed.mat # Delta highway speeds
+Table1308.1307.out <- addmargins(Table1308.1307.mat, FUN = list(Total = mean), quiet = TRUE)
+Table1308.1307.out <- OrganizeMat(Table1308.1307.out,RowSortList,ColSortList,TopNumDistricts)
+```
+
+There should be no difference in highway speeds between the No-Build and Build alternatives. The total difference in highway speeds for this alternative is **`r Table1308.1307.out[nrow(Table1308.1307.out),ncol(Table1308.1307.out)]`**. Non-zero district-to-district changes are shown in the table below. 
+
+```{r Table1308-Table1307,echo=FALSE, message=FALSE, warning=FALSE}
+
+if (Table1308.1307.out[nrow(Table1308.1307.out),ncol(Table1308.1307.out)] == 0) {
+  print("No change in the auto speeds between the No-Build and Existing alternatives.")
+} else {
+  # Print table
+  kable(Table1308.1307.out, col.names = colnames(Table1308.1307.out),
+        align=c(rep('r',ncol(Table1308.1307.out))),
+        digits=c(rep(2,ncol(Table1308.1307.out))),
+        caption = paste0("Table 13.08-13.07: Incremental Changes in Highway Speeds (No-Build minus Existing)"),
+        row.names= TRUE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+}
+```
+
+### 4.1.3 Transit Service Levels
+Differences in transit service should reflect only those changes between existing conditions and No-Build. The following table shows the differences between the current year and No-Build alternatives for the peak period. 
+
+```{r Table1003-Table1004PKe,echo=FALSE, message=FALSE, warning=FALSE}
+
+Route.pk <- mutate(Route.pk,
+                    ExNoBTrips = NBTrips - ExTrips,
+                    NoBBldTrips = BTrips - NBTrips,
+                    ExNoBMiles = NBMiles - ExMiles,
+                    NoBBldMiles = BMiles - NBMiles,
+                    ExNoBHours = NBHours - ExHours,
+                    NoBBldHours = BHours - NBHours)
+df <- select(Route.pk,
+             ID,Name,ExNoBTrips,ExNoBMiles,ExNoBHours,NBMiles,NBHours)
+df <- filter(df, (ExNoBTrips != 0) | (ExNoBMiles != 0) | (ExNoBHours != 0))
+df <- adorn_totals(df, "row")
+df <- mutate(df, 
+             NBDist = comma(ExNoBMiles/ExNoBTrips,accuracy=.1),
+             NBTime = comma(ExNoBHours/ExNoBTrips*60,accuracy=.1),
+             NBSpeed = ifelse((ExNoBHours > 0), ExNoBMiles / ExNoBHours, 0))
+df <- mutate(df,
+             Name = Name,
+             ExNoBTrips = comma(ExNoBTrips),
+             ExNoBMiles = comma(ExNoBMiles,accuracy=1),
+             ExNoBHours = comma(ExNoBHours,accuracy=.1),
+             NBSpeed = comma(NBSpeed,accuracy=.1))
+df <- select(df, ID,Name,ExNoBTrips,ExNoBMiles,ExNoBHours,NBSpeed,NBDist,NBTime)
+
+if (nrow(df)==0) {
+  print("No change in the peak period transit network between the No-Build and Existing alternatives.")
+} else {
+  kable(df, col.names = c("ID","Name","Trips","Miles","Hours","Avg Speed","Avg Dist","Avg Time"),
+        align=c('l',rep('r',(ncol(df)-1))),
+        digits=c(rep(1,ncol(df))),
+        caption = paste0("Table 10.03-04: Incremental Changes in Transit Service Levels (No-Build minus Existing) [PEAK]"),
+        row.names= TRUE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover")) 
+}
+rm(df)
+
+```
+
+The following table shows the differences between the current year and No-Build alternatives for the off-peak period. 
+
+```{r Table1003-Table1004OPe,echo=FALSE, message=FALSE, warning=FALSE}
+
+Route.op <- mutate(Route.op,
+                    ExNoBTrips = NBTrips - ExTrips,
+                    NoBBldTrips = BTrips - NBTrips,
+                    ExNoBMiles = NBMiles - ExMiles,
+                    NoBBldMiles = BMiles - NBMiles,
+                    ExNoBHours = NBHours - ExHours,
+                    NoBBldHours = BHours - NBHours)
+df <- select(Route.op,
+             ID,Name,ExNoBTrips,ExNoBMiles,ExNoBHours,NBMiles,NBHours)
+df <- filter(df, (ExNoBTrips != 0) | (ExNoBMiles != 0) | (ExNoBHours != 0))
+df <- adorn_totals(df, "row")
+df <- mutate(df, 
+             NBDist = comma(ExNoBMiles/ExNoBTrips,accuracy=.1),
+             NBTime = comma(ExNoBHours/ExNoBTrips*60,accuracy=.1),
+             NBSpeed = ifelse((NBHours > 0), ExNoBMiles / ExNoBHours, 0))
+df <- mutate(df,
+             Name = Name,
+             ExNoBTrips = comma(ExNoBTrips),
+             ExNoBMiles = comma(ExNoBMiles,accuracy=1),
+             ExNoBHours = comma(ExNoBHours,accuracy=.1),
+             NBSpeed = comma(NBSpeed,accuracy=.1))
+df <- select(df, ID,Name,ExNoBTrips,ExNoBMiles,ExNoBHours,NBSpeed,NBDist,NBTime)
+
+if (nrow(df)==0) {
+  print("No change in the off-peak period transit network between the No-Build and Build alternatives.")
+} else {
+    kable(df, col.names = c("ID","Name","Trips","Miles","Hours","Avg Speed","Avg Dist","Avg Time"),
+        align=c('l',rep('r',(ncol(df)-1))),
+        digits=c(rep(1,ncol(df))),
+        caption = paste0("Table 10.03-04: Incremental Changes in Transit Service Levels (No-Build minus Existing) [OFF-PEAK]"),
+        row.names= TRUE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover")) 
+}
+rm(df)
+```
+
+### 4.1.4 Park-Ride Lots
+Changes in PNR can be discovered by comparing the Existing Year and No-Build pnr.txt files.
+
+## 4.2 Incremental Transit Trips (No Build - Existing)
+
+```{r OrderFlag,echo=FALSE, message=FALSE, warning=FALSE}
+
+if (TopNumFlag==1) {
+  TableString = paste0("The following trip tables are sorted & aggregated according to the ",TopNumDistricts," districts with the highest number of project trips.")
+} else if (TopNumFlag==2) {
+  TableString = paste0("The following trip tables are sorted & aggregated according to the ",TopNumCorridor," corridor districts.")
+}
+
+```
+
+> `r TableString`
+
+```{r Table681-Table345,echo=FALSE, message=FALSE, warning=FALSE}
+
+Table68101.34501.mat <- Table68101.mat - Table34501.mat
+Table68101.34501.out <- OrganizeMat(Table68101.34501.mat,RowSortList.nt,ColSortList.nt,TopNumDistricts)
+if (sum(Table68101.34501.mat)==0) {
+  # Do nothing
+} else {
+  WriteMatrix(Table68101.34501.out,1,"Table 681.01: Incremental Transit Trips (No-Build minus Existing)")
+}
+
+```
+
+There are `r scales::comma(sum(Table68101.34501.out[1:TopNumCorridor,1:TopNumCorridor]))` intra-corridor trips (`r scales::percent(sum(Table68101.34501.out[1:TopNumCorridor,1:TopNumCorridor])/Table68101.34501.out[nrow(Table68101.34501.out),nrow(Table68101.34501.out)])` of total), `r scales::comma(sum(Table68101.34501.out[1:TopNumCorridor,(TopNumCorridor+1):(nrow(Table68101.34501.out)-1)]))` corridor to outside corridor trips (`r (scales::percent(sum(Table68101.34501.out[1:TopNumCorridor,(TopNumCorridor+1):(nrow(Table68101.34501.out)-1)])/Table68101.34501.out[nrow(Table68101.34501.out),nrow(Table68101.34501.out)]))`), `r scales::comma(sum(Table68101.34501.out[(TopNumCorridor+1):(nrow(Table68101.34501.out)-1),1:TopNumCorridor]))` outside corridor to inside corridor trips (`r scales::percent(sum(Table68101.34501.out[(TopNumCorridor+1):(nrow(Table68101.34501.out)-1),1:TopNumCorridor])/Table68101.34501.out[nrow(Table68101.34501.out),nrow(Table68101.34501.out)])`), and `r scales::comma(sum(Table68101.34501.out[(TopNumCorridor+1):(nrow(Table68101.34501.out)-1),(TopNumCorridor+1):(nrow(Table68101.34501.out)-1)]))` trips traveling outside the corridor (`r scales::percent(sum(Table68101.34501.out[(TopNumCorridor+1):(nrow(Table68101.34501.out)-1),(TopNumCorridor+1):(nrow(Table68101.34501.out)-1)])/Table68101.34501.out[nrow(Table68101.34501.out),nrow(Table68101.34501.out)])`).
+
+## 4.3 Ridership Responses (Loading/Assignment Data)
+
+### 4.3.1 Route-Level Boardings
+
+```{r 431RouteBoardingA,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- select(RouteBoarding, ID, Name, ExistTotal, NoBuildWalk, NoBuildKNR, NoBuildPNR, NoBuildTotal, NoBuildDelta)
+df <- filter(df, (trimws(df$ID) %in% KeyRoutes$ID))
+df <- mutate(df,
+             NoBuildDelta = comma(NoBuildDelta,accuracy=1),
+             ExistTotal = comma(ExistTotal,accuracy=1),
+             NoBuildTotal = comma(NoBuildTotal,accuracy=1),
+             NoBuildWalk = comma(NoBuildWalk,accuracy=1),
+             NoBuildKNR = comma(NoBuildKNR,accuracy=1),
+             NoBuildPNR = comma(NoBuildPNR,accuracy=1))
+
+kable(df, col.names = c("ID", "Route","Existing","Walk","KNR","PNR","Total","Delta"),
+      align=c('l','l',rep('r',(ncol(df)-2))),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table 10.01: Comparison of Route-level Existing and No-Build Volumes"),
+      row.names= TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+rm(df)
+```
+
+### 4.3.2 Mode of Access at Stations
+
+```{r StopBoarding3,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- select(StopBoarding,ID,Name,NoBuildWalk,NoBuildKNR,NoBuildPNR,NoBuildXfer,NoBuildTotal,ExistTotal,NoBuildDelta)
+df <- mutate(df,
+             ExistTotal = comma(ExistTotal),
+             NoBuildDelta = comma(NoBuildDelta),
+             NoBuildTotal = comma(NoBuildTotal),
+             NoBuildWalk = comma(NoBuildWalk),
+             NoBuildKNR = comma(NoBuildKNR),
+             NoBuildPNR = comma(NoBuildPNR),
+             NoBuildXfer = comma(NoBuildXfer))
+df <- df[trimws(df$ID) %in% KeyStops$ID,]
+
+kable(df, col.names = c("ID","Stop Name","Walk","KNR","PNR","Xfer","Boardings","Existing Boardings","Delta"),
+      align=c('l','l',rep('r',(ncol(df)-2))),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table 9.01: Comparison of Stop-Level No-Build and Existing Year Boardings"),
+      row.names= TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+rm(df)
+
+```
+
+
+***
+
+
+# 5.0 Build Assumptions & Results
+The purpose of this section is to provide the necessary information to confirm the plausibility of the Build predictions given the assumed changes in transit supply and demographic assumptions...
+
+We evaluate the ridership responses in the mode of access at stations, changes in total transit trip flows, change in route ridership, and the consistency between changes in supply with ridership responses. Separately we analyze the consistency with peer projects, both local and with other metro areas.
+
+## 5.1 Changes in Assumptions
+Forecast assumptions include population, employment, highway speeds and transit service levels. All differences in these assumptions between the No-Build and Build must be due to the project definition. 
+
+### 5.1.1 Population & Employment
+Differences in population and employment between the No-Build and Build assumptions are not permitted in Capital Investment Grant (CIG) forecasts. The following table shows all districts with a non-zero difference in population or employment between the No-Build and Build alternatives.
+```{r Table1201Pop,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- select(SEData, District,NoBBldPop,NoBBldEmp)
+df <- filter(df, (NoBBldPop != 0) | (NoBBldEmp !=0))
+
+if (nrow(df) == 0) {
+  print("No change in population & employment between the No-Build and Build alternatives.")
+} else {
+  df <- adorn_totals(df, "row")
+  kable(df, col.names = c("District","Population","Employment"),
+        align=c('l',rep('r',(ncol(df)-1))),
+        digits=c(rep(0,ncol(df))),
+        caption = paste0("Table 12.01: Incremental Changes in Population/Employment (Build minus No-Build)"),
+        row.names= FALSE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover")) 
+}
+rm(df)
+```
+
+### 5.1.2 Auto Speeds
+```{r NoBBldSupply,echo=FALSE, message=FALSE, warning=FALSE}
+
+Table1309.1308.mat <- Table1309.mat - Table1308.mat # Delta highway speeds
+Table1309.1308.out <- OrganizeMat2(Table1309.1308.mat,RowSortList.nt,ColSortList.nt,TopNumDistricts,TRUE,FALSE)
+
+```
+
+There should be no difference in highway speeds between the No-Build and Build alternatives. The total difference in highway speeds for this alternative is **`r Table1309.1308.out[nrow(Table1309.1308.out),ncol(Table1309.1308.out)]`**. Non-zero district-to-district changes are shown in the table below. If the highway speeds for the No-Build and Build alternatives are identical, no table will be displayed.
+
+```{r Table1309-Table1308,echo=FALSE, message=FALSE, warning=FALSE}
+
+if (sum(Table1309.1308.out) == 0) {
+  print("No change in auto travel speeds between the No-Build and Build alternatives.")
+} else {
+  # Print table
+  kable(Table1309.1308.out, col.names = colnames(Table1309.1308.out),
+        align=c(rep('r',ncol(Table1309.1308.out))),
+        digits=c(rep(2,ncol(Table1309.1308.out))),
+        caption = paste0("Table 13.09-13.08: Incremental Changes in Highway Speeds (Build minus No-Build"),
+        row.names= TRUE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+}
+
+```
+
+### 5.1.3 Transit Service Levels
+Differences in transit service should reflect only those changes necessary for the proposed project. The following table shows the differences between the No-Build and Build alternatives for the peak period. 
+```{r Table1003-Table1004PK,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- select(Route.pk,
+             ID,Name,NoBBldTrips,NoBBldMiles,NoBBldHours,BMiles,BHours)
+df <- filter(df,
+             (NoBBldTrips != 0) | (NoBBldMiles != 0) | (NoBBldHours != 0)) %>%
+  adorn_totals(where = "row")
+df <- mutate(df,
+             BDist = comma(NoBBldMiles/NoBBldTrips,accuracy=.1),
+             BTime = comma(NoBBldHours/NoBBldTrips*60,accuracy=.1),
+             BSpeed = ifelse((NoBBldHours > 0), NoBBldMiles / NoBBldHours, 0)) 
+
+df <- mutate(df,
+             Name = Name,
+             NoBBldTrips = comma(NoBBldTrips),
+             NoBBldMiles = comma(NoBBldMiles,accuracy=1),
+             NoBBldHours = comma(NoBBldHours,accuracy=.1),
+             BSpeed = comma(BSpeed,accuracy=.1))
+df <- select(df,
+             ID,Name,NoBBldTrips,NoBBldMiles,NoBBldHours,BSpeed,BDist,BTime)
+
+if (nrow(df)==0) {
+  print("No change in the peak period transit network between the No-Build and Build alternatives.")
+} else {
+    kable(df, col.names = c("ID","Name","Trips","Miles","Hours","Avg Speed","Avg Dist","Avg Time"),
+        align=c('l',rep('r',(ncol(df)-1))),
+        digits=c(rep(1,ncol(df))),
+        caption = paste0("Table 10.03-04: Incremental Changes in Transit Service Levels (Build minus No-Build) [PEAK]"),
+        row.names= TRUE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover")) 
+}
+rm(df)
+
+```
+
+The following table shows the differences between the No-Build and Build alternatives for the off-peak period. 
+```{r Table1003-Table1004OP,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- select(Route.op,
+             ID,Name,NoBBldTrips,NoBBldMiles,NoBBldHours,BMiles,BHours)
+df <- filter(df,
+             (NoBBldTrips != 0) | (NoBBldMiles != 0) | (NoBBldHours != 0)) %>%
+  adorn_totals(where = "row")
+df <- mutate(df,
+             BDist = comma(NoBBldMiles/NoBBldTrips,accuracy=.1),
+             BTime = comma(NoBBldHours/NoBBldTrips*60,accuracy=.1),
+             BSpeed = ifelse((NoBBldHours > 0), NoBBldMiles / NoBBldHours, 0)) 
+df <- mutate(df,
+             Name = Name,
+             NoBBldTrips = comma(NoBBldTrips),
+             NoBBldMiles = comma(NoBBldMiles,accuracy=1),
+             NoBBldHours = comma(NoBBldHours,accuracy=.1),
+             BSpeed = comma(BSpeed,accuracy=.1))
+df <- select(df,
+             ID,Name,NoBBldTrips,NoBBldMiles,NoBBldHours,BSpeed,BDist,BTime)
+
+if (nrow(df)==0) {
+  print("No change in the off-peak period transit network between the No-Build and Build alternatives.")
+} else {
+    kable(df, col.names = c("ID","Name","Trips","Miles","Hours","Avg Speed","Avg Dist","Avg Time"),
+        align=c('l',rep('r',(ncol(df)-1))),
+        digits=c(rep(1,ncol(Table1309.1308.out))),
+        caption = paste0("Table 10.03-04: Incremental Changes in Transit Service Levels (Build minus No-Build) [OFF-PEAK]"),
+        row.names= TRUE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover")) 
+}
+rm(df)
+```
+
+### 5.1.4 Park-Ride Lots
+PNR lots should only differ by those lots directly related to the project.
+
+## 5.2 Project Trips
+
+Project Trips are defined as trips that board, alight or travel through a new station. The number of project trips is **`r scales::comma(Table403[nrow(Table403),ncol(Table403)])`**. The number of new linked transit trips is **`r scales::comma(Table402[nrow(Table402),ncol(Table402)])`**, or **`r if (Table403[nrow(Table403),ncol(Table403)] > 0) { (scales::percent(Table402[nrow(Table402),ncol(Table402)] / Table403[nrow(Table403),ncol(Table403)])) } else { scales::percent(0) }`** of ridership. If the percentage of new riders is much greater than 50%, this may indicate that the project (a) represents a significant increase in corridor transit service, (b) the Fixed-Guideway Setting may be driving much of the project ridership, or a combination of (a) and (b). High percentages of new riders could involve higher FTA scrutiny.
+
+> `r TableString`
+
+```{r Table403,echo=FALSE, message=FALSE, warning=FALSE}
+
+Table403.out <- OrganizeMat(Table403.mat,RowSortList.nt,ColSortList.nt,TopNumDistricts)
+WriteMatrix(Table403.out,1,"Table 4.03: Project Trips")
+
+```
+
+There are `r scales::comma(sum(Table403.out[1:TopNumCorridor,1:TopNumCorridor]))` intra-corridor trips (`r scales::percent(sum(Table403.out[1:TopNumCorridor,1:TopNumCorridor])/Table403.out[nrow(Table403.out),nrow(Table403.out)])` of total), `r scales::comma(sum(Table403.out[1:TopNumCorridor,(TopNumCorridor+1):(nrow(Table403.out)-1)]))` corridor to outside corridor trips (`r (scales::percent(sum(Table403.out[1:TopNumCorridor,(TopNumCorridor+1):(nrow(Table403.out)-1)])/Table403.out[nrow(Table403.out),nrow(Table403.out)]))`), `r scales::comma(sum(Table403.out[(TopNumCorridor+1):(nrow(Table403.out)-1),1:TopNumCorridor]))` outside corridor to inside corridor trips (`r scales::percent(sum(Table403.out[(TopNumCorridor+1):(nrow(Table403.out)-1),1:TopNumCorridor])/Table403.out[nrow(Table403.out),nrow(Table403.out)])`), and `r scales::comma(sum(Table403.out[(TopNumCorridor+1):(nrow(Table403.out)-1),(TopNumCorridor+1):(nrow(Table403.out)-1)]))` trips traveling outside the corridor (`r scales::percent(sum(Table403.out[(TopNumCorridor+1):(nrow(Table403.out)-1),(TopNumCorridor+1):(nrow(Table403.out)-1)])/Table403.out[nrow(Table403.out),nrow(Table403.out)])`).
+
+## 5.3 Ridership Responses (Loading/Assignment Data)
+
+### 5.3.1 Project Station-to-Station Flows
+
+```{r Table404,echo=FALSE, message=FALSE, warning=FALSE}
+
+if (!CalibFlag) {
+  Table404.out <- OrganizeMat(Table404.mat,RowSortListStation.nt,ColSortListStation.nt,TopNumStations)
+  WriteMatrix(Table404.out,1,"Table 4.04: Station-to-Station Project Trips")
+} else {
+  print("The calibration flag is TRUE; no project mode to analyze.")
+}
+
+```
+
+### 5.3.2 Mode of Access at Stations
+```{r StopBoarding4,echo=FALSE, message=FALSE, warning=FALSE}
+df <- select(StopBoarding,ID,Name,BuildWalk,BuildKNR,BuildPNR,BuildXfer,BuildTotal,NoBuildTotal,BuildDelta)
+df <- mutate(df,
+             NoBuildTotal = comma(NoBuildTotal),
+             BuildDelta = comma(BuildDelta),
+             BuildTotal = comma(BuildTotal),
+             BuildWalk = comma(BuildWalk),
+             BuildKNR = comma(BuildKNR),
+             BuildPNR = comma(BuildPNR),
+             BuildXfer = comma(BuildXfer))
+df <- df[trimws(df$ID) %in% KeyStops$ID,]
+
+kable(df, col.names = c("ID","Stop Name","Walk","KNR","PNR","Xfer","Build","No-Build","Delta"),
+      align=c('l','l',rep('r',(ncol(df)-2))),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table 9.01: Comparison of Build and No-Build Boardings"),
+      row.names= TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+rm(df)
+```
+
+### 5.3.3 Route-Level Boardings
+
+```{r 531RouteBoardingA,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- select(RouteBoarding, ID, Name, NoBuildTotal, BuildWalk, BuildKNR, BuildPNR, BuildTotal, BuildDelta)
+df <- filter(df, (trimws(df$ID) %in% KeyRoutes$ID))
+df <- mutate(df,
+             BuildDelta = comma(BuildDelta,accuracy=1),
+             NoBuildTotal = comma(NoBuildTotal,accuracy=1),
+             BuildTotal = comma(BuildTotal,accuracy=1),
+             BuildWalk = comma(BuildWalk,accuracy=1),
+             BuildKNR = comma(BuildKNR,accuracy=1),
+             BuildPNR = comma(BuildPNR,accuracy=1))
+
+kable(df, col.names = c("ID", "Route","No-Build","Walk","KNR","PNR","Total","Delta"),
+      align=c('l','l',rep('r',(ncol(df)-2))),
+      digits=c(rep(0,ncol(df))),
+      caption = paste0("Table 10.01: Comparison of Route-level No-Build and Build Volumes"),
+      row.names= TRUE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) 
+
+rm(df)
+```
+
+
+## 5.4 Incremental Transit Trips (Build - No Build)
+
+Incremental linked trips represents the change in transit trips between the No-Build and Build alternatives.
+
+```{r Table402,echo=FALSE, message=FALSE, warning=FALSE}
+Table402.out <- OrganizeMat(Table402.mat,RowSortList.nt,ColSortList.nt,TopNumDistricts)
+WriteMatrix(Table402.out,1,"Table 4.02: Incremental Linked Trips")
+
+```
+
+There are `r scales::comma(sum(Table402.out[1:TopNumCorridor,1:TopNumCorridor]))` intra-corridor trips (`r scales::percent(sum(Table402.out[1:TopNumCorridor,1:TopNumCorridor])/Table402.out[nrow(Table402.out),nrow(Table402.out)])` of total), `r scales::comma(sum(Table402.out[1:TopNumCorridor,(TopNumCorridor+1):(nrow(Table402.out)-1)]))` corridor to outside corridor trips (`r (scales::percent(sum(Table402.out[1:TopNumCorridor,(TopNumCorridor+1):(nrow(Table402.out)-1)])/Table402.out[nrow(Table402.out),nrow(Table402.out)]))`), `r scales::comma(sum(Table402.out[(TopNumCorridor+1):(nrow(Table402.out)-1),1:TopNumCorridor]))` outside corridor to inside corridor trips (`r scales::percent(sum(Table402.out[(TopNumCorridor+1):(nrow(Table402.out)-1),1:TopNumCorridor])/Table402.out[nrow(Table402.out),nrow(Table402.out)])`), and `r scales::comma(sum(Table402.out[(TopNumCorridor+1):(nrow(Table402.out)-1),(TopNumCorridor+1):(nrow(Table402.out)-1)]))` trips traveling outside the corridor (`r scales::percent(sum(Table402.out[(TopNumCorridor+1):(nrow(Table402.out)-1),(TopNumCorridor+1):(nrow(Table402.out)-1)])/Table402.out[nrow(Table402.out),nrow(Table402.out)])`).
+
+## 5.5 Incremental VMT (Build - No Build)
+The incremental passenger miles traveled (PMT) has been converted to incremental vehicle miles traveled (VMT) using an auto occupancy factor of `r PMTtoVMT`. Reductions in VMT due to the project are shown as negative values. 
+
+In STOPS, PMT is calculated [^16] for each alternative using the following formula:
+
+[^16]: Ridership Forecasting with STOPS for Transit Project Planning. National Transit Institute workshop held in St. Paul, MN in September 2019. 
+
+
+$$\begin{aligned}
+PMT_{alt} = \sum_{i=1}^n\sum_{j=1}^n \{(AutoTrips_{ij}*AutoDist_{ij})+ \\
+(AutoAccessTrips_{ij}*AutoAccessDist_{iS})\} 
+\end{aligned}$$ 
+
+where $alt$ is the alternative (Existing, No Build or Build), $i$ is the production zone, $j$ is the attraction zone, $S$ is the PNR or KNR drop-off station, $AutoTrips_{ij}$ is the total auto person trips on the zonal pair, $AutoDist_{ij}$ is the auto distance between the two zones, $AutoAccessTrips_{ij}$ is the total auto-access person trips on the zonal pair, and $AutoAccessDist_{iS}$ is the auto distance between the production zone and the PNR or KNR drop-off station.
+
+Incremental (or delta) PMT is calculated as the difference between two alternatives:
+
+$$\Delta PMT = PMT_{alt1} - PMT_{alt2}$$
+For transit alternatives, $\Delta PMT$ should be negative - a positive beneficial reduction - since the Build project shifts person trips from auto to transit modes. 
+
+Extending the previous two equations:
+
+$$\begin{aligned}
+\Delta PMT_{alt} = \sum_{i=1}^n\sum_{j=1}^n \{(\Delta AutoTrips_{ij}*AutoDist_{ij})+ \\
+(\Delta AutoAccessTrips_{ij}*AutoAccessDist_{iS})\}
+\end{aligned}$$  
+
+where $\Delta AutoTrips_{ij}$ are incremental transit trips (all access modes) multiplied by -1 to indicate they are a reduction of auto trips, and $\Delta AutoAccessTrips_{ij}$ are incremental PNR and KNR transit trips. Between a typical No Build and Build, there is an increase in negative VMT from the reduction of auto trips and a corresponding decrease in negative VMT from the increase in auto access trips. Put another way: the amount of incremental VMT widens from the reduction of auto trips and narrows from the increase in auto access trips. A restating of the previous equation is:
+
+$$\begin{aligned}
+\Delta PMT_{alt} = \sum_{i=1}^n\sum_{j=1}^n \{(\Delta TransitTrips_{ij}*-1*AutoDist_{ij})+ \\
+(\Delta PNR/KNRTrips_{ij}*AutoAccessDist_{iS})\}
+\end{aligned}$$ 
+
+Finally, incremental VMT is calculated by dividing the incremental PMT by a locally-derived auto occupancy factor. Common auto occupancy rates are 1.15-1.30.
+$$\Delta VMT_{alt} = \frac {\Delta PMT_{alt}} {AutoOccupancyFactor}$$ 
+
+```{r Table801,echo=FALSE, message=FALSE, warning=FALSE}
+
+Table801.mat <- Table801.mat / PMTtoVMT
+Table801.out <- OrganizeMat(Table801.mat,RowSortList.nt,ColSortList.nt,TopNumDistricts)
+WriteMatrix(Table801.out,1,paste0("Table 8.01: Incremental VMT (AutoOccFac=",PMTtoVMT,")"))
+```
+
+Dividing incremental VMT by the new riders provides a reasonableness check. The numbers in the following table should be less than the project length. 
+
+```{r Table801b,echo=FALSE, message=FALSE, warning=FALSE}
+
+Table801b.out <- Table801.out / Table402.out
+WriteMatrix(Table801b.out,1,paste0("Table 8.01b: Incremental VMT per New Rider (AutoOccFac=",PMTtoVMT,")"))
+
+```
+
+## 5.6 Capital Investment Grant (CIG) Metrics
+The project trips is **`r scales::comma(Table403[nrow(Table403),ncol(Table403)])`**, the project trips from zero-car households is **`r scales::comma(Table603[nrow(Table603),ncol(Table603)])`**, the number of new linked trips is **`r scales::comma(Table402[nrow(Table402),ncol(Table402)])`**, and the change in VMT is **`r scales::comma(Table801.out[nrow(Table801.out),ncol(Table801.out)])`** using an average auto occupancy factor of `r PMTtoVMT`.
+
+***
+
+# 6.0 Technical Appendix
+This section provides the complete listing of selected tables from the STOPS output file. These tables are searchable for easy referencing during analysis.
+
+## 6.1 Station Boardings by Mode of Access (Daily)
+The following is the complete STOPS 9.01 table. This table provides the modes of access (Walk, KNR, PNR, Xfer) by station for the existing, no-build and build alternatives. The columns are sortable. Use the search box to identify specific stations. Boarding counts are taken from Table 1.02 and included here for easy referencing.
+
+```{r StopBoarding5,echo=FALSE, message=FALSE, warning=FALSE}
+
+StopBoarding$Name <- trimws(StopBoarding$Name, which = "both")
+StopData$Name <- trimws(StopData$Name, which = "both")
+df <- StopBoarding
+df <- left_join(df, StopData, by = c("ID", "Name")) %>%
+  select(ID, Name, Count, ExistWalk, ExistKNR, ExistPNR, ExistXfer, ExistTotal, 
+         NoBuildWalk, NoBuildKNR, NoBuildPNR, NoBuildXfer, NoBuildTotal, NoBuildDelta,
+         BuildWalk, BuildKNR, BuildPNR, BuildXfer, BuildTotal, BuildDelta) %>%
+  mutate(ExistDelta = ExistTotal - Count)
+
+reactable(df,
+          resizable = TRUE,
+          searchable = TRUE,
+          bordered = TRUE,
+          highlight = TRUE,
+          minRows = 10,
+          showPageSizeOptions = TRUE, 
+          style = list(fontFamily = "Arial", fontSize = "12px"),
+          columnGroups = list(
+            colGroup(name = "Existing", columns = c("ExistWalk", "ExistKNR", "ExistPNR", "ExistXfer", "ExistTotal", "ExistDelta")),
+            colGroup(name = "No Build", columns = c("NoBuildWalk", "NoBuildKNR", "NoBuildPNR", "NoBuildXfer", "NoBuildTotal", "NoBuildDelta")),
+            colGroup(name = "Build", columns = c("BuildWalk", "BuildKNR", "BuildPNR",  "BuildXfer", "BuildTotal", "BuildDelta"))
+          ),
+          columns = list(
+            ID = colDef(name = "ID", align = "left"),
+            Name = colDef(name = "Stop Name", align="left"),
+            ExistWalk = colDef(name="Walk", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistKNR = colDef(name="KNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistPNR = colDef(name="PNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistXfer = colDef(name="Xfer", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistTotal = colDef(name="Total", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0),
+                                style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            ExistDelta = colDef(name="Delta", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0), 
+                                style = list(background = "rgba(128, 128, 0, 0.3)", fontWeight = "bold")),
+            NoBuildWalk = colDef(name="Walk", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildKNR = colDef(name="KNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildPNR = colDef(name="PNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildXfer = colDef(name="Xfer", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildTotal = colDef(name="Total", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0),
+                                style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            NoBuildDelta = colDef(name="Delta", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0),
+                                  style = list(background = "rgba(255, 255, 0, 0.3)", fontWeight = "bold")),
+            BuildWalk = colDef(name="Walk", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildKNR = colDef(name="KNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildPNR = colDef(name="PNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildXfer = colDef(name="Xfer", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildTotal = colDef(name="Total", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0),
+                                style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            BuildDelta = colDef(name="Delta", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0),
+                                style = list(background = "rgba(0, 0, 255, 0.2)", fontWeight = "bold"))
+          ))
+
+rm(df)
+
+```
+
+## 6.2 Route-Level Boardings by Production-End Mode-of-Access(Daily)
+The following is the complete STOPS 10.01 table. This table provides the count (if provided) and 3 modes of access (Walk, KNR, PNR) by route for the existing, no-build and build alternatives. The columns are sortable. Use the search box to identify specific stations. 
+
+```{r RouteBoarding4,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- RouteBoarding
+
+reactable(df,
+          resizable = TRUE,
+          searchable = TRUE,
+          bordered = TRUE,
+          highlight = TRUE,
+          minRows = 10,
+          showPageSizeOptions = TRUE, 
+          style = list(fontFamily = "Arial", fontSize = "12px"),
+          columnGroups = list(
+            colGroup(name = "Existing", columns = c("Count", "ExistWalk", "ExistKNR", "ExistPNR", "ExistTotal", "ExistDelta")),
+            colGroup(name = "No Build", columns = c("NoBuildWalk", "NoBuildKNR", "NoBuildPNR", "NoBuildTotal", "NoBuildDelta")),
+            colGroup(name = "Build", columns = c("BuildWalk", "BuildKNR", "BuildPNR", "BuildTotal", "BuildDelta"))
+          ),
+          columns = list(
+            ID = colDef(name = "ID", align = "left"),
+            Name = colDef(name = "Stop Name", align="left"),
+            Count = colDef(name="Count", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0), 
+                           style = list(background = "rgba(0, 128, 0, 0.1)", fontWeight = "bold")),
+            ExistWalk = colDef(name="Walk", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistKNR = colDef(name="KNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistPNR = colDef(name="PNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistTotal = colDef(name="Total", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0), 
+                                style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            ExistDelta = colDef(name="Delta", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0), 
+                                style = list(background = "rgba(128, 128, 0, 0.3)", fontWeight = "bold")),
+            NoBuildWalk = colDef(name="Walk", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildKNR = colDef(name="KNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildPNR = colDef(name="PNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildTotal = colDef(name="Total", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0), 
+                                  style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            NoBuildDelta = colDef(name="Delta", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0), 
+                                  style = list(background = "rgba(255, 255, 0, 0.3)", fontWeight = "bold")),
+            BuildWalk = colDef(name="Walk", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildKNR = colDef(name="KNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildPNR = colDef(name="PNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildTotal = colDef(name="Total", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0), 
+                                style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            BuildDelta = colDef(name="Delta", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0), 
+                                style = list(background = "rgba(0, 0, 255, 0.2)", fontWeight = "bold"))
+          ))
+
+rm(df)
+
+```
+
+
+## 6.3 Route-Level Boardings by Station Group (Daily)
+The following is the complete STOPS 10.02 table. This table provides the existing, no-build and build boardings by station group and route. It also includes boardings by 3 modes of access (Walk, KNR, PNR) for the Build alternative only. The columns are sortable. Use the search box to identify specific stations. 
+
+```{r 73RouteBoarding,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- select(RouteByStop, Route, StopGroup, ExistTotal, NoBuildTotal, BuildTotal, BuildDeltaT, BuildWalk, BuildKNR, BuildPNR)
+df <- mutate(df,
+             BuildDeltaT = BuildTotal - NoBuildTotal,
+)
+
+reactable(df,
+          resizable = TRUE,
+          searchable = TRUE,
+          bordered = TRUE,
+          highlight = TRUE,
+          minRows = 10,
+          groupBy = "Route",
+          showPageSizeOptions = TRUE, 
+          style = list(fontFamily = "Arial", fontSize = "12px"),
+          columnGroups = list(
+            colGroup(name = "Overview", columns = c("Route", "StopGroup", "ExistTotal", "NoBuildTotal", "BuildTotal", "BuildDeltaT")),
+            colGroup(name = "Build", columns = c("BuildWalk", "BuildKNR", "BuildPNR"))
+          ),
+          columns = list(
+            Route = colDef(name = "Route Name", align="left"),
+            StopGroup = colDef(name="Stop Group",align="left"),
+            ExistTotal = colDef(name="Existing", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildTotal = colDef(name="No Build", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildTotal = colDef(name="Build", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildDeltaT = colDef(name="Delta", align="right", format = colFormat(separators = TRUE, digits=0)),
+            BuildWalk = colDef(name="Walk", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildKNR = colDef(name="KNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildPNR = colDef(name="PNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0))
+          ))
+
+rm(df)
+
+```
+
+
+## 6.4 Route-Level Trips, Miles and Hours
+
+### 6.4.1 Peak Period
+The following is the complete STOPS 10.03 table, which provides peak route-level totals of trips, miles, hours and average speed for existing, no build and build alternatives. Use the search box to identify specific routes. Columns are sortable.
+
+The peak period reflects all transit routes that could conceivably be used for a trip arriving at its destination between 8 and 9 AM. 
+
+```{r Table74,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- Route.pk
+df <- mutate(df,
+             ExSpeed = ifelse((ExHours > 0), ExMiles / ExHours, 0),
+             NBSpeed = ifelse((NBHours > 0), NBMiles / NBHours, 0),
+             BSpeed = ifelse((BHours > 0), BMiles / BHours, 0))
+df <- select(df, 
+             ID, Name, ExTrips, ExMiles, ExHours, ExSpeed,
+                       NBTrips, NBMiles, NBHours, NBSpeed,
+                       BTrips, BMiles, BHours, BSpeed)
+
+reactable(df,
+          resizable = TRUE,
+          searchable = TRUE,
+          bordered = TRUE,
+          highlight = TRUE,
+          minRows = 10,
+          showPageSizeOptions = TRUE, 
+          style = list(fontFamily = "Arial", fontSize = "12px"),
+          columnGroups = list(
+            colGroup(name = "Existing", columns = c("ExTrips", "ExMiles", "ExHours", "ExSpeed")),
+            colGroup(name = "No Build", columns = c("NBTrips", "NBMiles", "NBHours", "NBSpeed")),
+            colGroup(name = "Build", columns = c("BTrips", "BMiles", "BHours", "BSpeed"))
+          ),
+          columns = list(
+            ID = colDef(name = "ID", align = "center"),
+            Name = colDef(name = "Name", align = "center"),
+            ExTrips = colDef(name="Trips", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExMiles = colDef(name="Miles", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExHours = colDef(name="Hours", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExSpeed = colDef(name="Speed", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=1)),
+            NBTrips = colDef(name="Trips", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NBMiles = colDef(name="Miles", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NBHours = colDef(name="Hours", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NBSpeed = colDef(name="Speed", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=1)),
+            BTrips = colDef(name="Trips", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BMiles = colDef(name="Miles", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BHours = colDef(name="Hours", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BSpeed = colDef(name="Speed", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=1))
+          ))
+
+rm(df)
+```
+
+### 6.4.2 Off-Peak Period
+The following is the complete STOPS 10.04 table, which provides off-peak route-level totals of trips, miles, hours and average speed for existing, no build and build alternatives. Use the search box to identify specific routes. Columns are sortable.
+
+The off-peak period reflects all transit routes that could conceivably be used for a trip arriving at its destination between 12 and 1 PM.
+
+```{r Table75,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- Route.op
+df <- mutate(df,
+             ExSpeed = ifelse((ExHours > 0), ExMiles / ExHours, 0),
+             NBSpeed = ifelse((NBHours > 0), NBMiles / NBHours, 0),
+             BSpeed = ifelse((BHours > 0), BMiles / BHours, 0))
+df <- select(df, 
+             ID, Name, ExTrips, ExMiles, ExHours, ExSpeed,
+                       NBTrips, NBMiles, NBHours, NBSpeed,
+                       BTrips, BMiles, BHours, BSpeed)
+
+reactable(df,
+          resizable = TRUE,
+          searchable = TRUE,
+          bordered = TRUE,
+          highlight = TRUE,
+          minRows = 10,
+          showPageSizeOptions = TRUE, 
+          style = list(fontFamily = "Arial", fontSize = "12px"),
+          columnGroups = list(
+            colGroup(name = "Existing", columns = c("ExTrips", "ExMiles", "ExHours", "ExSpeed")),
+            colGroup(name = "No Build", columns = c("NBTrips", "NBMiles", "NBHours", "NBSpeed")),
+            colGroup(name = "Build", columns = c("BTrips", "BMiles", "BHours", "BSpeed"))
+          ),
+          columns = list(
+            ID = colDef(name = "ID", align = "center"),
+            Name = colDef(name = "Name", align = "center"),
+            ExTrips = colDef(name="Trips", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExMiles = colDef(name="Miles", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExHours = colDef(name="Hours", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExSpeed = colDef(name="Speed", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=1)),
+            NBTrips = colDef(name="Trips", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NBMiles = colDef(name="Miles", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NBHours = colDef(name="Hours", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NBSpeed = colDef(name="Speed", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=1)),
+            BTrips = colDef(name="Trips", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BMiles = colDef(name="Miles", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BHours = colDef(name="Hours", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BSpeed = colDef(name="Speed", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=1))
+          ))
+
+rm(df)
+```
+
+## 6.5 Route-Level Boardings by Route Specific Mode-of-Access (daily)
+
+The following is the complete STOPS 10.05 table, which provides daily count (if provided) route-level boardings by 4 modes of access (walk, KNR, PNR and Xfer) for the existing, no build and build alternatives. Use the search box to identify specific routes. Columns are sortable.
+
+```{r RouteBoarding76,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- RouteByAccess
+
+if (nrow(df)==0) {
+  print("No data. It is possible that a version of STOPS was used that does not report Table 10.05.")
+} else {
+  
+reactable(df,
+          resizable = TRUE,
+          searchable = TRUE,
+          bordered = TRUE,
+          highlight = TRUE,
+          minRows = 10,
+          showPageSizeOptions = TRUE, 
+          style = list(fontFamily = "Arial", fontSize = "12px"),
+          columnGroups = list(
+            colGroup(name = "Existing", columns = c("ExistWalk", "ExistKNR", "ExistPNR", "ExistXfer", "ExistTotal", "ExistDelta")),
+            colGroup(name = "No Build", columns = c("NoBuildWalk", "NoBuildKNR", "NoBuildPNR", "NoBuildXfer", "NoBuildTotal", "NoBuildDelta")),
+            colGroup(name = "Build", columns = c("BuildWalk", "BuildKNR", "BuildPNR",  "BuildXfer", "BuildTotal", "BuildDelta"))
+          ),
+          columns = list(
+            ID = colDef(name = "ID", align = "left"),
+            Route = colDef(name = "Route", align="left"),
+            Count = colDef(name="Count", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistWalk = colDef(name="Walk", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistKNR = colDef(name="KNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistPNR = colDef(name="PNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistXfer = colDef(name="Xfer", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistTotal = colDef(name="Existing", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            ExistDelta = colDef(name="Delta", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildWalk = colDef(name="Walk", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildKNR = colDef(name="KNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildPNR = colDef(name="PNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildXfer = colDef(name="Xfer", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildTotal = colDef(name="No Build", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildDelta = colDef(name="Delta", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildWalk = colDef(name="Walk", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildKNR = colDef(name="KNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildPNR = colDef(name="PNR", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildXfer = colDef(name="Xfer", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildTotal = colDef(name="Build", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0)),
+            BuildDelta = colDef(name="Delta", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0))
+          ))
+}
+
+rm(df)
+
+```
+
+## 6.6 Route-to-Route Transfers (Daily)
+
+The following is the complete STOPS 10.06 table, which provides daily route-level transfers by route for the existing, no build and build alternatives. Use the search box to identify specific routes. Columns are sortable. Please note that the results appear to be in O/D format.
+
+```{r Route2RXfers,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- RouteXfers
+df <- df[, !names(df) %in% c("ID","ExistID","NoBuildID","BuildID")]
+
+if (nrow(df)==0) {
+  print("No data. It is possible that a version of STOPS was used that does not report Table 10.06.")
+} else {
+
+reactable(df,
+          resizable = TRUE,
+          searchable = TRUE,
+          bordered = TRUE,
+          highlight = TRUE,
+          minRows = 10,
+          groupBy = "Route",
+          showPageSizeOptions = TRUE, 
+          style = list(fontFamily = "Arial", fontSize = "12px"),
+          columnGroups = list(
+            colGroup(name = "To Route", columns = c("Route")),
+            colGroup(name = "From Route (Existing)", columns = c("ExistRoute", "ExistXfer")),
+            colGroup(name = "From Route (No Build)", columns = c("NoBuildRoute", "NoBuildXfer")),
+            colGroup(name = "From Route (Build)", columns = c("BuildRoute", "BuildXfer"))
+          ),
+          columns = list(
+            Route = colDef(name = "Route", align="left"),
+            ExistRoute = colDef(name = "Route", align="left"),
+            ExistXfer = colDef(name="Xfers", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0), 
+                               style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            NoBuildRoute = colDef(name = "Route", align="left"),
+            NoBuildXfer = colDef(name="Xfers", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0), 
+                                 style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            BuildRoute = colDef(name = "Route", align="left"),
+            BuildXfer = colDef(name="Xfers", align="right", aggregate="max", format = colFormat(separators = TRUE, digits=0), 
+                               style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold"))
+          ))
+
+}
+rm(df)
+```
+
+## 6.7 Summary of Linked Transit Trips Trips 
+
+The following table reflects the series of STOPS 11.XX tables, which provide model and survey trips by submode, access mode, auto ownership and scenario. Use the search box to identify specific routes. Columns are filterable. To view the totals within each category, type "Total" in the Trip Purpose column, "All HH" in the HH Cars column, "All Transit" in the Sub-mode column and "All Access" in the Access mode column. The Delta columns reflect the difference between Model and Survey values within each category.
+
+```{r SummaryOfTrips,echo=FALSE, message=FALSE, warning=FALSE}
+
+df <- TripBreakdown
+
+if (nrow(df)==0) {
+  print("No data. It is possible that a version of STOPS was used that does not report Tables 11.01-11.04.")
+} else {
+
+reactable(df,
+          resizable = TRUE,
+          filterable = TRUE,
+          bordered = TRUE,
+          highlight = TRUE,
+          minRows = 10,
+          showPageSizeOptions = TRUE, 
+          style = list(fontFamily = "Arial", fontSize = "12px"),
+          columnGroups = list(
+            colGroup(name = "Existing", columns = c("ExistModel", "ExistSurvey", "ExistDelta")),
+            colGroup(name = "No Build", columns = c("NoBuildModel", "NoBuildSurvey", "NoBuildDelta")),
+            colGroup(name = "Build", columns = c("BuildModel", "BuildSurvey", "BuildDelta")),
+            colGroup(name = "Project", columns = c("ProjectModel", "ProjectSurvey", "ProjectDelta"))
+          ),
+          columns = list(
+            Purpose = colDef(name = "Trip Purpose", align="center"),
+            AutoOwn = colDef(name = "HH Cars", align="left"),
+            Submode = colDef(name = "Sub-mode", align="left"),
+            Access = colDef(name = "Access mode", align="left"),
+            ExistModel = colDef(name = "Model", align="right", format = colFormat(separators = TRUE, digits=0), 
+                                 style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            ExistSurvey = colDef(name = "Survey", align="right", format = colFormat(separators = TRUE, digits=0)),
+            ExistDelta = colDef(name = "Delta", align="right", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildModel = colDef(name = "Model", align="right", format = colFormat(separators = TRUE, digits=0), 
+                                 style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            NoBuildSurvey = colDef(name = "Survey", align="right", format = colFormat(separators = TRUE, digits=0)),
+            NoBuildDelta = colDef(name = "Delta", align="right", format = colFormat(separators = TRUE, digits=0)),
+            BuildModel = colDef(name = "Model", align="right", format = colFormat(separators = TRUE, digits=0), 
+                                 style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            BuildSurvey = colDef(name = "Survey", align="right", format = colFormat(separators = TRUE, digits=0)),
+            BuildDelta = colDef(name = "Delta", align="right", format = colFormat(separators = TRUE, digits=0)),
+            ProjectModel = colDef(name = "Model", align="right", format = colFormat(separators = TRUE, digits=0), 
+                                 style = list(background = "rgba(0, 0, 0, 0.1)", fontWeight = "bold")),
+            ProjectSurvey = colDef(name = "Survey", align="right", format = colFormat(separators = TRUE, digits=0)),
+            ProjectDelta = colDef(name = "Delta", align="right", format = colFormat(separators = TRUE, digits=0))
+          ))
+
+}
+rm(df)
+```
+
+## 6.8 Project Station-to-Station Flows
+
+The following table shows the project station-to-station flows. 
+
+```{r 78Stations,echo=FALSE, message=FALSE, warning=FALSE}
+
+if (!CalibFlag) {
+  WriteMatrix(Table404,1,"Table 4.04: Station-to-Station Project Trips")
+} else {
+  print("The calibration flag is TRUE; no project station-to-station flows to display.")
+}
+
+```
+
+
+***
+
+# References 

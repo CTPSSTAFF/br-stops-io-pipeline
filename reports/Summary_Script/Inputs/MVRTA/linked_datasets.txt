@@ -1,0 +1,4 @@
+url,trip_updates,vehicle_positions,service_alerts,authentication_type,authentication_info_url,api_key_parameter_name
+http://meva.syncromatics.com/gtfs-rt/tripupdates,true,false,false,none,,
+http://meva.syncromatics.com/gtfs-rt/vehiclepositions,false,true,false,none,,
+https://meva.syncromatics.com/gtfs-rt/alerts,false,false,true,none,,

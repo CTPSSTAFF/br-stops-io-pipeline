@@ -1,0 +1,2 @@
+agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone
+"478a27db-1bf2-463e-9806-f038e89fc0ae","MWRTA","http://www.mwrta.com/","America/New_York","en","5089352222"

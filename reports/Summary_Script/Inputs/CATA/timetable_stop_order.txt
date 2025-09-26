@@ -1,0 +1,293 @@
+timetable_id,stop_id,stop_sequence,stop_name,connected_routes
+5072,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5072,798364,2,Lincoln Park,2/Gloucester Crossing/Business Express
+5072,798352,3,Gloucester High School,"2/Gloucester Crossing/Business Express, 4/Gloucester - Rockport via Thatcher Road, 6/Magnolia, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Essex Ave to GHS, Tripper/Magnolia Ave, Atlantic St to GHS, Tripper/Magnolia to GHS, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Rocky Neck, Eastern Ave to GHS, Tripper/Washington St, Cherry St to GHS"
+5072,4247221,4,YMCA (Gloucester),"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express"
+5072,798351,5,Gloucester Crossing,"2/Gloucester Crossing/Business Express, /Blackburn Tripper"
+5072,798312,6,Blackburn Industrial Park,"2/Gloucester Crossing/Business Express, /Blackburn Tripper, /School Trippers"
+5072,798375,7,Millpond Medical Building,"2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5072,798299,8,Addison Gilbert Hospital,"2/Gloucester Crossing/Business Express, 3/Lanesville, /Blackburn Tripper, /School Trippers, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Washington St, Cherry St to GHS"
+5072,798381,9,Poplar Park,"2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5072,798372,10,Sheedy Park,"2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5072,798353,11,Commuter Rail Station - Gloucester ,"11/Stage Fort Park Shuttle, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 7/Saturday Mall Shuttle, 9/Beverly Commuter, /Blackburn Tripper, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5072,798374,12,McPherson Park,"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5072,798382,13,Post Office - City Hall,"2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5072,798323,14,Curtis - Clark Building,"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5072,798390,15,Senior Center - Dunkin' Donuts,"2/Gloucester Crossing/Business Express, Tripper/Back Shore, Rocky Neck to GHS"
+5073,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5073,798364,2,Lincoln Park,2/Gloucester Crossing/Business Express
+5073,798352,3,Gloucester High School,"2/Gloucester Crossing/Business Express, 4/Gloucester - Rockport via Thatcher Road, 6/Magnolia, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Essex Ave to GHS, Tripper/Magnolia Ave, Atlantic St to GHS, Tripper/Magnolia to GHS, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Rocky Neck, Eastern Ave to GHS, Tripper/Washington St, Cherry St to GHS"
+5073,4247221,4,YMCA (Gloucester),"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express"
+5073,798351,5,Gloucester Crossing,"2/Gloucester Crossing/Business Express, /Blackburn Tripper"
+5073,798312,6,Blackburn Industrial Park,"2/Gloucester Crossing/Business Express, /Blackburn Tripper, /School Trippers"
+5073,798375,7,Millpond Medical Building,"2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5073,798299,8,Addison Gilbert Hospital,"2/Gloucester Crossing/Business Express, 3/Lanesville, /Blackburn Tripper, /School Trippers, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Washington St, Cherry St to GHS"
+5073,798381,9,Poplar Park,"2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5073,798372,10,Sheedy Park,"2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5073,798353,11,Commuter Rail Station - Gloucester ,"11/Stage Fort Park Shuttle, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 7/Saturday Mall Shuttle, 9/Beverly Commuter, /Blackburn Tripper, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5073,798374,12,McPherson Park,"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5073,798382,13,Post Office - City Hall,"2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5073,798323,14,Curtis - Clark Building,"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+5073,798390,15,Senior Center - Dunkin' Donuts,"2/Gloucester Crossing/Business Express, Tripper/Back Shore, Rocky Neck to GHS"
+5074,798362,1,Lexington Ave & Flume Rd,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5074,798368,2,Magnolia Square,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5074,798417,3,Western Ave & Magnolia Ave,"6/Magnolia, /School Trippers, Tripper/Magnolia Ave, Atlantic St to GHS, Tripper/Magnolia to GHS"
+5074,798386,4,Ravenswood Park,"6/Magnolia, Tripper/Magnolia to GHS"
+5074,798395,5,Western Ave & Stage Fort Park,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5074,798352,6,Gloucester High School,"2/Gloucester Crossing/Business Express, 4/Gloucester - Rockport via Thatcher Road, 6/Magnolia, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Essex Ave to GHS, Tripper/Magnolia Ave, Atlantic St to GHS, Tripper/Magnolia to GHS, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Rocky Neck, Eastern Ave to GHS, Tripper/Washington St, Cherry St to GHS"
+5074,798326,7,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5075,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5075,798369,2,Main St & Pleasant St,"11/Stage Fort Park Shuttle, 1/Gloucester - Rockport via Eastern Ave, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /Cruiseship Trolley, /School Trippers, Tripper/Magnolia to GHS"
+5075,798395,3,Western Ave & Stage Fort Park,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5075,798355,4,Hammond Castle,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5075,4247233,5,Rafe's Chasm,6/Magnolia
+5075,798362,6,Lexington Ave & Flume Rd,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5076,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5076,798369,2,Main St & Pleasant St,"11/Stage Fort Park Shuttle, 1/Gloucester - Rockport via Eastern Ave, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /Cruiseship Trolley, /School Trippers, Tripper/Magnolia to GHS"
+5076,798395,3,Western Ave & Stage Fort Park,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5076,798355,4,Hammond Castle,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5076,4247233,5,Rafe's Chasm,6/Magnolia
+5076,798362,6,Lexington Ave & Flume Rd,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5077,798362,1,Lexington Ave & Flume Rd,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5077,798368,2,Magnolia Square,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5077,798417,3,Western Ave & Magnolia Ave,"6/Magnolia, /School Trippers, Tripper/Magnolia Ave, Atlantic St to GHS, Tripper/Magnolia to GHS"
+5077,798386,4,Ravenswood Park,"6/Magnolia, Tripper/Magnolia to GHS"
+5077,798395,5,Western Ave & Stage Fort Park,"6/Magnolia, /School Trippers, Tripper/Magnolia to GHS"
+5077,798326,6,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5078,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5078,798369,2,Main St & Pleasant St,"11/Stage Fort Park Shuttle, 1/Gloucester - Rockport via Eastern Ave, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /Cruiseship Trolley, /School Trippers, Tripper/Magnolia to GHS"
+5078,798353,3,Commuter Rail Station - Gloucester ,"11/Stage Fort Park Shuttle, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 7/Saturday Mall Shuttle, 9/Beverly Commuter, /Blackburn Tripper, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5078,802509,4,Addison Gilbert Hospital,"3/Lanesville, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Washington St, Cherry St to GHS"
+5078,4247225,5,Goose Gove Reservation,3/Lanesville
+5078,802517,6,Lanesville Post Office,"3/Lanesville, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+5078,4247223,7,Halibut Point State Park,3/Lanesville
+5078,798388,8,Train Station - Rockport,"10/Rockport Shuttle, 3/Lanesville, 9/Beverly Commuter, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+5078,798387,9,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5079,798387,1,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5079,798325,2,Dock Square,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /Cape Ann Works, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5079,798388,3,Train Station - Rockport,"10/Rockport Shuttle, 3/Lanesville, 9/Beverly Commuter, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+5079,4247223,4,Halibut Point State Park,3/Lanesville
+5079,798358,5,Lanesville Post Office,"3/Lanesville, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+5079,798300,6,Annisquam Village Church,"3/Lanesville, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Washington St, Cherry St to GHS"
+5079,798299,7,Addison Gilbert Hospital,"2/Gloucester Crossing/Business Express, 3/Lanesville, /Blackburn Tripper, /School Trippers, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Washington St, Cherry St to GHS"
+5079,4247510,8,Washington St & Railroad Ave,"2A/Gloucester Crossing/Blackburn Express, 3/Lanesville"
+5079,798326,9,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5080,798387,1,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5080,798325,2,Dock Square,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /Cape Ann Works, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5080,798388,3,Train Station - Rockport,"10/Rockport Shuttle, 3/Lanesville, 9/Beverly Commuter, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+5080,4247223,4,Halibut Point State Park,3/Lanesville
+5080,798358,5,Lanesville Post Office,"3/Lanesville, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+5080,798300,6,Annisquam Village Church,"3/Lanesville, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Washington St, Cherry St to GHS"
+5080,798299,7,Addison Gilbert Hospital,"2/Gloucester Crossing/Business Express, 3/Lanesville, /Blackburn Tripper, /School Trippers, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Washington St, Cherry St to GHS"
+5080,4247510,8,Washington St & Railroad Ave,"2A/Gloucester Crossing/Blackburn Express, 3/Lanesville"
+5080,798326,9,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5081,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5081,798369,2,Main St & Pleasant St,"11/Stage Fort Park Shuttle, 1/Gloucester - Rockport via Eastern Ave, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /Cruiseship Trolley, /School Trippers, Tripper/Magnolia to GHS"
+5081,798353,3,Commuter Rail Station - Gloucester ,"11/Stage Fort Park Shuttle, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 7/Saturday Mall Shuttle, 9/Beverly Commuter, /Blackburn Tripper, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5081,802509,4,Addison Gilbert Hospital,"3/Lanesville, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Washington St, Cherry St to GHS"
+5081,4247225,5,Goose Gove Reservation,3/Lanesville
+5081,802517,6,Lanesville Post Office,"3/Lanesville, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+5081,4247223,7,Halibut Point State Park,3/Lanesville
+5081,798388,8,Train Station - Rockport,"10/Rockport Shuttle, 3/Lanesville, 9/Beverly Commuter, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+5081,798387,9,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5082,4247227,1,Essex Housing Authority,5/Gloucester - West Gloucester - Essex
+5082,4247228,2,Winthrop St/Western Ave ,5/Gloucester - West Gloucester - Essex
+5082,4247229,3,First Congregational Church,5/Gloucester - West Gloucester - Essex
+5082,4247230,4,South Village Center (Blue Marlin),5/Gloucester - West Gloucester - Essex
+5082,798347,5,Essex Town Line,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS"
+5082,798340,6,Essex Ave & Lawrence Mountain Rd,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS"
+5082,798414,7,Train Station - West Gloucester,"5/Gloucester - West Gloucester - Essex, /Cape Ann Works, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia Ave, Atlantic St to GHS"
+5082,798341,8,Essex Ave & Edgewood Rd,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia Ave, Atlantic St to GHS"
+5082,798326,9,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5083,4247227,1,Essex Housing Authority,5/Gloucester - West Gloucester - Essex
+5083,4247228,2,Winthrop St/Western Ave ,5/Gloucester - West Gloucester - Essex
+5083,4247229,3,First Congregational Church,5/Gloucester - West Gloucester - Essex
+5083,4247230,4,South Village Center (Blue Marlin),5/Gloucester - West Gloucester - Essex
+5083,798347,5,Essex Town Line,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS"
+5083,798340,6,Essex Ave & Lawrence Mountain Rd,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS"
+5083,798414,7,Train Station - West Gloucester,"5/Gloucester - West Gloucester - Essex, /Cape Ann Works, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia Ave, Atlantic St to GHS"
+5083,798341,8,Essex Ave & Edgewood Rd,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia Ave, Atlantic St to GHS"
+5083,798326,9,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5084,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5084,798369,2,Main St & Pleasant St,"11/Stage Fort Park Shuttle, 1/Gloucester - Rockport via Eastern Ave, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /Cruiseship Trolley, /School Trippers, Tripper/Magnolia to GHS"
+5084,798415,3,Western Ave & Centennial Ave,"5/Gloucester - West Gloucester - Essex, Tripper/Essex Ave to GHS"
+5084,798356,4,Heights at Cape Ann,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS"
+5084,798414,5,Train Station - West Gloucester,"5/Gloucester - West Gloucester - Essex, /Cape Ann Works, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia Ave, Atlantic St to GHS"
+5084,798342,6,Essex Ave & Fernald St,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS"
+5084,798347,7,Essex Town Line,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS"
+5084,4247230,8,South Village Center (Blue Marlin),5/Gloucester - West Gloucester - Essex
+5084,4247231,9,Martin St/Winthrop St (Bank Gloucester),5/Gloucester - West Gloucester - Essex
+5084,4247232,10,Essex Housing Authority,5/Gloucester - West Gloucester - Essex
+5085,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5085,798369,2,Main St & Pleasant St,"11/Stage Fort Park Shuttle, 1/Gloucester - Rockport via Eastern Ave, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /Cruiseship Trolley, /School Trippers, Tripper/Magnolia to GHS"
+5085,798415,3,Western Ave & Centennial Ave,"5/Gloucester - West Gloucester - Essex, Tripper/Essex Ave to GHS"
+5085,798356,4,Heights at Cape Ann,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS"
+5085,798414,5,Train Station - West Gloucester,"5/Gloucester - West Gloucester - Essex, /Cape Ann Works, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia Ave, Atlantic St to GHS"
+5085,798342,6,Essex Ave & Fernald St,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS"
+5085,798347,7,Essex Town Line,"5/Gloucester - West Gloucester - Essex, /School Trippers, Tripper/Essex Ave to GHS"
+5085,4247230,8,South Village Center (Blue Marlin),5/Gloucester - West Gloucester - Essex
+5085,4247231,9,Martin St/Winthrop St (Bank Gloucester),5/Gloucester - West Gloucester - Essex
+5085,4247232,10,Essex Housing Authority,5/Gloucester - West Gloucester - Essex
+5086,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5086,801986,2,Stop & Shop - CVS,"1/Gloucester - Rockport via Eastern Ave, 4/Gloucester - Rockport via Thatcher Road"
+5086,801990,3,Shaw's Supermarket,1/Gloucester - Rockport via Eastern Ave
+5086,798387,4,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5087,798387,1,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5087,798325,2,Dock Square,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /Cape Ann Works, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5087,801990,3,Shaw's Supermarket,1/Gloucester - Rockport via Eastern Ave
+5087,801986,4,Stop & Shop - CVS,"1/Gloucester - Rockport via Eastern Ave, 4/Gloucester - Rockport via Thatcher Road"
+5087,798326,5,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5088,798387,1,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5088,798325,2,Dock Square,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /Cape Ann Works, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5088,801990,3,Shaw's Supermarket,1/Gloucester - Rockport via Eastern Ave
+5088,801986,4,Stop & Shop - CVS,"1/Gloucester - Rockport via Eastern Ave, 4/Gloucester - Rockport via Thatcher Road"
+5088,798326,5,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5089,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5089,801986,2,Stop & Shop - CVS,"1/Gloucester - Rockport via Eastern Ave, 4/Gloucester - Rockport via Thatcher Road"
+5089,801990,3,Shaw's Supermarket,1/Gloucester - Rockport via Eastern Ave
+5089,798387,4,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5090,807832,1,Bridge St - Variety Store,8/City of Beverly Shuttle
+5090,807841,2,Commuter Rail Station - Beverly,"8/City of Beverly Shuttle, 9/Beverly Commuter"
+5090,807842,3,Rantoul St & Edwards St,8/City of Beverly Shuttle
+5090,807834,4,Beverly City Hall,8/City of Beverly Shuttle
+5090,807836,5,Cabot St & Rantoul St St,8/City of Beverly Shuttle
+5090,807857,6,Garden City Apartments,8/City of Beverly Shuttle
+5090,807838,7,Beverly Hospital,8/City of Beverly Shuttle
+5090,3460638,8,Whole Foods Shopping,8/City of Beverly Shuttle
+5090,807851,9,Council on Aging,8/City of Beverly Shuttle
+5090,807846,10,Balch St Apartments,8/City of Beverly Shuttle
+5090,807864,11,North Beverly Plaza - Shaw's,8/City of Beverly Shuttle
+5090,807838,12,Beverly Hospital,8/City of Beverly Shuttle
+5090,807849,13,YMCA,8/City of Beverly Shuttle
+5090,807848,14,Turtle Creek Apartments,8/City of Beverly Shuttle
+5090,2597091,15,Montserrat Station,8/City of Beverly Shuttle
+5090,807850,16,Cedar St Apartments,8/City of Beverly Shuttle
+5090,807841,17,Commuter Rail Station - Beverly,"8/City of Beverly Shuttle, 9/Beverly Commuter"
+5090,807834,18,Beverly City Hall,8/City of Beverly Shuttle
+5090,807855,19,Stop & Shop,8/City of Beverly Shuttle
+5090,807854,20,Cummings Center,8/City of Beverly Shuttle
+5090,3460643,21,Trask Ln & Folly Hill,8/City of Beverly Shuttle
+5090,3460648,22,Market Basket,8/City of Beverly Shuttle
+5090,807832,23,Bridge St - Variety Store,8/City of Beverly Shuttle
+5091,807832,1,Bridge St - Variety Store,8/City of Beverly Shuttle
+5091,807841,2,Commuter Rail Station - Beverly,"8/City of Beverly Shuttle, 9/Beverly Commuter"
+5091,807842,3,Rantoul St & Edwards St,8/City of Beverly Shuttle
+5091,807834,4,Beverly City Hall,8/City of Beverly Shuttle
+5091,807836,5,Cabot St & Rantoul St St,8/City of Beverly Shuttle
+5091,807857,6,Garden City Apartments,8/City of Beverly Shuttle
+5091,807838,7,Beverly Hospital,8/City of Beverly Shuttle
+5091,3460638,8,Whole Foods Shopping,8/City of Beverly Shuttle
+5091,807851,9,Council on Aging,8/City of Beverly Shuttle
+5091,807846,10,Balch St Apartments,8/City of Beverly Shuttle
+5091,807864,11,North Beverly Plaza - Shaw's,8/City of Beverly Shuttle
+5091,807838,12,Beverly Hospital,8/City of Beverly Shuttle
+5091,807849,13,YMCA,8/City of Beverly Shuttle
+5091,807848,14,Turtle Creek Apartments,8/City of Beverly Shuttle
+5091,2597091,15,Montserrat Station,8/City of Beverly Shuttle
+5091,807850,16,Cedar St Apartments,8/City of Beverly Shuttle
+5091,807841,17,Commuter Rail Station - Beverly,"8/City of Beverly Shuttle, 9/Beverly Commuter"
+5091,807834,18,Beverly City Hall,8/City of Beverly Shuttle
+5091,807855,19,Stop & Shop,8/City of Beverly Shuttle
+5091,807854,20,Cummings Center,8/City of Beverly Shuttle
+5091,3460643,21,Trask Ln & Folly Hill,8/City of Beverly Shuttle
+5091,3460648,22,Market Basket,8/City of Beverly Shuttle
+5091,807832,23,Bridge St - Variety Store,8/City of Beverly Shuttle
+5092,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5092,807762,2,East Main St & Rocky Neck Ave,"4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS"
+5092,798376,3,Niles Beach,"4/Gloucester - Rockport via Thatcher Road, Tripper/Back Shore, Rocky Neck to GHS"
+5092,798305,4,Atlantic St & Moorland Rds,"4/Gloucester - Rockport via Thatcher Road, Tripper/Back Shore, Rocky Neck to GHS"
+5092,801986,5,Stop & Shop - CVS,"1/Gloucester - Rockport via Eastern Ave, 4/Gloucester - Rockport via Thatcher Road"
+5092,798354,6,Good Harbor Beach,4/Gloucester - Rockport via Thatcher Road
+5092,801985,7,Cape Hedge Inn,"4/Gloucester - Rockport via Thatcher Road, Tripper/Back Shore, Rocky Neck to GHS"
+5092,798325,8,Dock Square,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /Cape Ann Works, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5092,798387,9,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5093,798387,1,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5093,798314,2,Cape Hedge Inn,"4/Gloucester - Rockport via Thatcher Road, Tripper/Back Shore, Rocky Neck to GHS"
+5093,4247226,3,Long Beach Dairy Maid,4/Gloucester - Rockport via Thatcher Road
+5093,815374,4,Good Harbor Beach,4/Gloucester - Rockport via Thatcher Road
+5093,801986,5,Stop & Shop - CVS,"1/Gloucester - Rockport via Eastern Ave, 4/Gloucester - Rockport via Thatcher Road"
+5093,807764,6,Atlantic St & Moorland Rds,"4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS"
+5093,807765,7,Niles Beach,"4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS"
+5093,798331,8,East Main St & Rocky Neck Ave,"4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS"
+5093,798326,9,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5093,798353,10,Commuter Rail Station - Gloucester ,"11/Stage Fort Park Shuttle, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 7/Saturday Mall Shuttle, 9/Beverly Commuter, /Blackburn Tripper, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5093,798352,11,Gloucester High School,"2/Gloucester Crossing/Business Express, 4/Gloucester - Rockport via Thatcher Road, 6/Magnolia, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Essex Ave to GHS, Tripper/Magnolia Ave, Atlantic St to GHS, Tripper/Magnolia to GHS, Tripper/Rockport, Lanesville, Washington St to GHS, Tripper/Rocky Neck, Eastern Ave to GHS, Tripper/Washington St, Cherry St to GHS"
+5094,798387,1,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5094,798314,2,Cape Hedge Inn,"4/Gloucester - Rockport via Thatcher Road, Tripper/Back Shore, Rocky Neck to GHS"
+5094,4247226,3,Long Beach Dairy Maid,4/Gloucester - Rockport via Thatcher Road
+5094,815374,4,Good Harbor Beach,4/Gloucester - Rockport via Thatcher Road
+5094,801986,5,Stop & Shop - CVS,"1/Gloucester - Rockport via Eastern Ave, 4/Gloucester - Rockport via Thatcher Road"
+5094,807764,6,Atlantic St & Moorland Rds,"4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS"
+5094,807765,7,Niles Beach,"4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS"
+5094,798331,8,East Main St & Rocky Neck Ave,"4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS"
+5094,798326,9,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5095,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5095,807762,2,East Main St & Rocky Neck Ave,"4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS"
+5095,798376,3,Niles Beach,"4/Gloucester - Rockport via Thatcher Road, Tripper/Back Shore, Rocky Neck to GHS"
+5095,798305,4,Atlantic St & Moorland Rds,"4/Gloucester - Rockport via Thatcher Road, Tripper/Back Shore, Rocky Neck to GHS"
+5095,801986,5,Stop & Shop - CVS,"1/Gloucester - Rockport via Eastern Ave, 4/Gloucester - Rockport via Thatcher Road"
+5095,798354,6,Good Harbor Beach,4/Gloucester - Rockport via Thatcher Road
+5095,801985,7,Cape Hedge Inn,"4/Gloucester - Rockport via Thatcher Road, Tripper/Back Shore, Rocky Neck to GHS"
+5095,798325,8,Dock Square,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /Cape Ann Works, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5095,798387,9,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5099,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5099,798369,2,Main St & Pleasant St,"11/Stage Fort Park Shuttle, 1/Gloucester - Rockport via Eastern Ave, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /Cruiseship Trolley, /School Trippers, Tripper/Magnolia to GHS"
+5099,798353,3,Commuter Rail Station - Gloucester ,"11/Stage Fort Park Shuttle, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 7/Saturday Mall Shuttle, 9/Beverly Commuter, /Blackburn Tripper, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5099,798363,4,Liberty Tree Mall,7/Saturday Mall Shuttle
+5099,4247234,5,Northshore Mall At JC Penney Entrance,7/Saturday Mall Shuttle
+5100,798363,1,Liberty Tree Mall,7/Saturday Mall Shuttle
+5100,4247234,2,Northshore Mall At JC Penney Entrance,7/Saturday Mall Shuttle
+5100,798353,3,Commuter Rail Station - Gloucester ,"11/Stage Fort Park Shuttle, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 7/Saturday Mall Shuttle, 9/Beverly Commuter, /Blackburn Tripper, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5100,798326,4,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+5105,798388,1,Train Station - Rockport,"10/Rockport Shuttle, 3/Lanesville, 9/Beverly Commuter, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+5105,798353,2,Commuter Rail Station - Gloucester ,"11/Stage Fort Park Shuttle, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 7/Saturday Mall Shuttle, 9/Beverly Commuter, /Blackburn Tripper, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5105,807841,3,Commuter Rail Station - Beverly,"8/City of Beverly Shuttle, 9/Beverly Commuter"
+5106,807841,1,Commuter Rail Station - Beverly,"8/City of Beverly Shuttle, 9/Beverly Commuter"
+5106,798353,2,Commuter Rail Station - Gloucester ,"11/Stage Fort Park Shuttle, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 7/Saturday Mall Shuttle, 9/Beverly Commuter, /Blackburn Tripper, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Downtown Gloucester to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+5106,798388,3,Train Station - Rockport,"10/Rockport Shuttle, 3/Lanesville, 9/Beverly Commuter, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+6928,798313,1,Meadows Parking Lot - Blue Gate,10/Rockport Shuttle
+6928,798387,2,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+6928,798325,3,Dock Square,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /Cape Ann Works, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+6928,798348,4,Front Beach,10/Rockport Shuttle
+6928,798308,5,Back Beach,10/Rockport Shuttle
+6928,798388,6,Train Station - Rockport,"10/Rockport Shuttle, 3/Lanesville, 9/Beverly Commuter, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+6928,798313,7,Meadows Parking Lot - Blue Gate,10/Rockport Shuttle
+6929,798313,1,Meadows Parking Lot - Blue Gate,10/Rockport Shuttle
+6929,798387,2,Rockport Market,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+6929,798325,3,Dock Square,"10/Rockport Shuttle, 1/Gloucester - Rockport via Eastern Ave, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, /Cape Ann Works, /School Trippers, Tripper/Back Shore, Rocky Neck to GHS, Tripper/Rockport, Lanesville, Washington St to GHS"
+6929,798348,4,Front Beach,10/Rockport Shuttle
+6929,798308,5,Back Beach,10/Rockport Shuttle
+6929,798388,6,Train Station - Rockport,"10/Rockport Shuttle, 3/Lanesville, 9/Beverly Commuter, /School Trippers, Tripper/Rockport, Lanesville, Washington St to GHS"
+6929,798313,7,Meadows Parking Lot - Blue Gate,10/Rockport Shuttle
+7208,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+7208,798908,2,Main St & Hancock St,"11/Stage Fort Park Shuttle, 2A/Gloucester Crossing/Blackburn Express, /Cruiseship Trolley"
+7208,807772,3,Gortons of Gloucester,"11/Stage Fort Park Shuttle, 2A/Gloucester Crossing/Blackburn Express"
+7208,4247508,4,Across from the Curtis B. Clark Building,2A/Gloucester Crossing/Blackburn Express
+7208,798385,5,Prospect St & Pleasant St,"2A/Gloucester Crossing/Blackburn Express, /School Trippers"
+7208,4247509,6,Across from McPherson Park,2A/Gloucester Crossing/Blackburn Express
+7208,4247510,7,Washington St & Railroad Ave,"2A/Gloucester Crossing/Blackburn Express, 3/Lanesville"
+7208,4247221,8,YMCA (Gloucester),"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express"
+7208,2455854,9,Gloucester Crossing,"2A/Gloucester Crossing/Blackburn Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+7208,4247511,10,Blackburn Industrial Park,2A/Gloucester Crossing/Blackburn Express
+7208,4247519,11,Washington St Dunkin Donuts,2A/Gloucester Crossing/Blackburn Express
+7208,4247518,12,Washington St MBTA Station,2A/Gloucester Crossing/Blackburn Express
+7208,798374,13,McPherson Park,"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+7208,802496,14,Prospect St & Pleasant St,"2A/Gloucester Crossing/Blackburn Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+7208,798323,15,Curtis - Clark Building,"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+7208,798326,16,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+7209,798326,1,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"
+7209,798908,2,Main St & Hancock St,"11/Stage Fort Park Shuttle, 2A/Gloucester Crossing/Blackburn Express, /Cruiseship Trolley"
+7209,807772,3,Gortons of Gloucester,"11/Stage Fort Park Shuttle, 2A/Gloucester Crossing/Blackburn Express"
+7209,4247508,4,Across from the Curtis B. Clark Building,2A/Gloucester Crossing/Blackburn Express
+7209,798385,5,Prospect St & Pleasant St,"2A/Gloucester Crossing/Blackburn Express, /School Trippers"
+7209,4247509,6,Across from McPherson Park,2A/Gloucester Crossing/Blackburn Express
+7209,4247510,7,Washington St & Railroad Ave,"2A/Gloucester Crossing/Blackburn Express, 3/Lanesville"
+7209,4247221,8,YMCA (Gloucester),"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express"
+7209,2455854,9,Gloucester Crossing,"2A/Gloucester Crossing/Blackburn Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+7209,4247511,10,Blackburn Industrial Park,2A/Gloucester Crossing/Blackburn Express
+7209,4247519,11,Washington St Dunkin Donuts,2A/Gloucester Crossing/Blackburn Express
+7209,4247518,12,Washington St MBTA Station,2A/Gloucester Crossing/Blackburn Express
+7209,798374,13,McPherson Park,"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+7209,802496,14,Prospect St & Pleasant St,"2A/Gloucester Crossing/Blackburn Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+7209,798323,15,Curtis - Clark Building,"2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, /School Trippers, Tripper/Downtown Gloucester to GHS"
+7209,798326,16,Rose Baker Senior Center,"1/Gloucester - Rockport via Eastern Ave, 2A/Gloucester Crossing/Blackburn Express, 2/Gloucester Crossing/Business Express, 3/Lanesville, 4/Gloucester - Rockport via Thatcher Road, 5/Gloucester - West Gloucester - Essex, 6/Magnolia, 7/Saturday Mall Shuttle, /Blackburn Tripper, /School Trippers, Tripper/Essex Ave to GHS, Tripper/Magnolia to GHS"

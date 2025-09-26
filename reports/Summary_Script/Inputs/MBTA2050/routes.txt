@@ -1,0 +1,157 @@
+route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color
+439,1,439,modified - YF (Nahant-Lynn),,3,,C9500E,ffffff
+210,1,210,modified - WF+ (Quincy-North Quincy-Fields Corner),,3,,5A8400,ffffff
+220,1,220,- MF (Hingham Depot-Quincy),,3,,A72051,ffffff
+61,1,61,modified - WF (North Waltham-MarketPlace Drive) - paired with 058,,3,,005BAA,ffffff
+451,1,451,modified - YF (Beverly-Salem),,3,,613FA6,ffffff
+7,1,T7,modified - HF (Sullivan-Charlestown-South Boston),,3,,066A40,ffffff
+8,1,T8,modified - HF (Harbor Point-Copley),,3,,A72051,ffffff
+29,1,29,- YF (Mattapan - Jackson Square),,3,,ac7e00,ffffff
+34E,1,34E,modified - WF+ (Walpole-Dedham-Forest Hills),,3,,005BAA,ffffff
+429,1,429,- WF+ (Northgate Shopping Center - Central Square,Lynn),,3,,"ac7e00,ffffff"
+96,1,T96,modified - HF (Malden-Medford-Davis-Union),,3,,A72051,ffffff
+44,1,44,- WF+ (Jackson Square - Ruggles),,3,,ac7e00,ffffff
+70,1,T70,modified - HF (Waltham-Watertown-Kendall),,3,,C9500E,ffffff
+50,1,50,modified - WF+ (Readville-Fairmount-Hyde Park-Forest Hills),,3,,5A8400,ffffff
+201,1,201,- WF (Fields Corner Loop via Neponset Ave),,3,,ac7e00,ffffff
+9,1,T9,- HF (South Boston-Broadway-Copley),,3,,613FA6,ffffff
+15,1,T15,- HF (Fields Corner - Ruggles),,3,,C9500E,ffffff
+1,1,T1,- HF (Harvard-Back Bay-Nubian),,3,,066A40,ffffff
+35,1,35,- MF (Dedham Mall-Centre St-Forest Hills),,3,,613FA6,ffffff
+39,1,T39,- HF (Forest Hills - Back Bay Station),,3,,ac7e00,ffffff
+230,1,230,- WF+ (Montello Commuter Rail Station - Quincy Center),,3,,ac7e00,ffffff
+236,1,236,- WF (South Shore Plaza - Quincy Center),,3,,ac7e00,ffffff
+504,1,504,- XF2+YF (Watertown-Downtown),,3,,5A8400,ffffff
+101,1,T101,modified - HF (Medford-Sullivan-Kendall),,3,,005BAA,ffffff
+119,1,119,modified - MF (Winthrop-Revere),,3,,613FA6,ffffff
+238,1,238,modified - WF+ (Holbrook/Randolph-Quincy Adams),,3,,5A8400,ffffff
+26,1,26,- MF (Ashmont - Gallivan Boulevard),,3,,ac7e00,ffffff
+42,1,42,modified - MF (Forest Hills-Nubian-Broadway),,3,,613FA6,ffffff
+11,1,11,modified - WF+ (South Boston-Broadway),,3,,007DBD,ffffff
+225A,1,225,(variant) - WF+ (Quincy Center-South St-Weymouth Landing)),,3,,066A40,ffffff
+455,1,455,modified - MF (Salem-Swampscott-Wonderland),,3,,613FA6,ffffff
+245,1,245,- WFW (Quincy-Milton-Mattapan),,3,,A92023,ffffff
+741,1,SL1,- HF (Logan Airport-South Station),,3,,7c878e,ffffff
+30,1,30,- WF (Mattapan-Forest Hills),,3,,C9500E,ffffff
+64,1,64,modified - MF (Oak Square-Kendall/MIT),,3,,ac7e00,ffffff
+225B,1,225,- WF+ (Quincy Center-Quincy Ave-Weymouth Landing),,3,,005BAA,ffffff
+215,1,215,modified - MF (Quincy Center-East Milton-Ashmont),,3,,066A40,ffffff
+71,1,T71,- HF (Watertown-Harvard),,3,,005BAA,ffffff
+714,1,714,modified - WF (Hull-Hingham),,3,,005BAA,ffffff
+51,1,51,- WF+ (Reservoir-Bellevue-Forest Hills),,3,,A72051,ffffff
+108,1,108,modified - MF (Malden Center-Kennedy Drive-Linden Square),,3,,613FA6,ffffff
+21,1,21,- MF (Ashmont-Forest Hills),,3,,C9500E,ffffff
+38,1,38,modified - WF+ (West Roxbury-Nubian),,3,,5A8400,ffffff
+743,1,SL3,- HF (Chelsea-South Station),,3,,7c878e,ffffff
+106,1,106,modified - MF (Lebanon Loop-Wellington),,3,,A72051,ffffff
+87,1,87,- WF+ (Arlington Center-Lechmere),,3,,ac7e00,ffffff
+58,1,58,- WF (MarketPlace Drive-Waltham-West Newton-Watertown) - paired with 061,,3,,007AB8,ffffff
+28,1,T28,modified - HF (Mattapan-Nubian-Kenmore),,3,,613FA6,ffffff
+105,1,105,modified - MF (Saugus-Malden),,3,,007DBD,ffffff
+34,1,34,modified - MF (Legacy Place-Forest Hills),,3,,A92023,ffffff
+57,1,T57,- HF (Watertown Square-Oak Square-Kenmore),,3,,5A8400,ffffff
+17,1,17,- WF+ (Fields Corner - Andrew via Uphams Corner),,3,,ac7e00,ffffff
+442,1,442,modified - MF (Marblehead-Swampscott-Wonderland),,3,,5A8400,ffffff
+222,1,222,modified - MF (Lovell Corners-Quincy Center),,3,,005BAA,ffffff
+67,1,67,- XF+YF Turkey Hill - Alewife,,3,,ac7e00,ffffff
+113,1,113,- WF+ (Assembly-Sullivan-Chelsea-Maverick),,3,,598200,ffffff
+217,1,217,- XF (Quincy-Milton-Ashmont),,3,,007DBD,ffffff
+65,1,65,modified - MF (Brighton - Ruggles),,3,,066A40,ffffff
+22,1,T22,modified - HF (Ashmont-LMA),,3,,A92023,ffffff
+62,1,62,- WF+ (Bedford-Lexington-Alewife),,3,,5A8400,ffffff
+85,1,85,- XF+YF (Spring Hill-Union Square-Kendall-Longwood-Ruggles),,3,,007AB8,ffffff
+23,1,T23,- HF (Ashmont-Nubian-Ruggles),,3,,066A40,ffffff
+45,1,45,- MF (Franklin Park - Ruggles),,3,,ac7e00,ffffff
+10,1,10,modified - MF (South Boston-Andrew-Ruggles),,3,,005BAA,ffffff
+73,1,T73,- HF (Waverly-Harvard),,3,,005BAA,ffffff
+86,1,86,modified - MF (Reservoir-Allston-Harvard),,3,,5A8400,ffffff
+43,1,43,- YF (Ruggles-Park Street),,3,,007DBD,ffffff
+216,1,216,- MF+ (Houghs Neck-Quincy),,3,,A72051,ffffff
+354,1,354,- XF Burlington - Downtown Boston,,3,,ac7e00,ffffff
+109,1,T109,modified - HF (Everett-Sullivan-Harvard),,3,,613FA6,ffffff
+131,1,131,modified - WF+ (Woburn-Stoneham-Melrose-Malden),,3,,C9500E,ffffff
+74,1,74,- MF (Belmont Center - Harvard via Concord Avenue),,3,,ac7e00,ffffff
+69,1,69,- MF (Harvard-Lechmere),,3,,A72051,ffffff
+60,1,60,modified - MF (Newton Common-Chestnut Hill-Brookline Village-Fenway),,3,,C9500E,ffffff
+505,1,505,modified - XF2 (Waltham-Newton-Downtown),,3,,613FA6,ffffff
+100,1,100,- WF+ (Elm Street - Wellington),,3,,ac7e00,ffffff
+211,1,211,- WF+ (Squantum-North Quincy-Quincy),,3,,005BAA,ffffff
+59,1,59,modified - WF+ (Needham Junction-Newton Highlands-Watertown Square),,3,,007DBD,ffffff
+53,1,53,- WF (MarketPlace Drive-Brandeis-Woodland) - paired with 056,,3,,A92023,ffffff
+41,1,41,modified - WF (Heath St-Jackson-Nubian-South Bay-JFK/UMass)),,3,,A92023,ffffff
+95,1,95,modified - MF+ (Arlington-Medford-Sullivan),,3,,613FA6,ffffff
+132,1,132,- WF+ (Stoneham-Malden),,3,,007DBD,ffffff
+116,1,T116,- HF (Wonderland-Chelsea-Maverick),,3,,A92023,ffffff
+12,1,T12,- HF (Brookline Village-LMA-Andrew-Downtown),,3,,5A8400,ffffff
+47,1,T47,modified - HF (Union Square - Ruggles),,3,,613FA6,ffffff
+240,1,240,modified - WF+ (Avon-Randolph-Milton-Ashmont),,3,,A92023,ffffff
+32,1,T32,- HF (Hyde Park-Forest Hills),,3,,066A40,ffffff
+99,1,99,modified - WF (Melrose-Malden Center - Wellington),,3,,ac7e00,ffffff
+90,1,90,- MF+ (Clarendon-Davis-Assembly),,3,,005BAA,ffffff
+83,1,83,modified - MF (Rindge-Porter-Inman-Central),,3,,066A40,ffffff
+134,1,134,- WF+ North Woburn - Wellington,,3,,ac7e00,ffffff
+742,1,SL2,- HF (Design Center - South Station),,3,,7c878e,ffffff
+76,1,76,modified - XF+YF (Lexington-Alewife),,3,,212121,ffffff
+351,1,351,- XF (Burlington Peak),,3,,066A40,ffffff
+104,1,T104,modified - HF (Malden-Everett-Chelsea-Wood Island),,3,,005BAA,ffffff
+112,1,112,modified - WF (Admiral's Hill-Quigley Hospital-Maverick),,3,,5A8400,ffffff
+14,1,14,modified - WF (Roslindale Sq-American Legion Hwy-Nubian),,3,,613FA6,ffffff
+56,1,56,- WF (Watertown-Crafts St-Waltham-MarketPlace Drive) - paired with 053,,3,,A92023,ffffff
+19,1,19,- XF (Fields Corner-Ruggles),,3,,ac7e00,ffffff
+435,1,435,modified - WF+ (Salem Depot-Peabody-Lynn),,3,,A72051,ffffff
+24,1,24,modified - MF (Dedham Mall-Hyde Park-Mattapan-Ashmont),,3,,005BAA,ffffff
+120,1,120,modified - MF (Winthrop-Maverick),,3,,C9500E,ffffff
+89,1,89,modified - MF (Davis-Sullivan)),,3,,C9500E,ffffff
+75,1,75,- MF (Belmont-Harvard),,3,,A92023,ffffff
+31,1,T31,- HF (Mattapan-Forest Hills),,3,,A72051,ffffff
+426,1,426,modified - MF (Lynn-Saugus-Wonderland),,3,,005BAA,ffffff
+16,1,T16,modified - HF (Forest Hills-Uphams-Andrew),,3,,005BAA,ffffff
+52,1,52,modified - WFW (Charles River Loop-Newton Center-Watertown),,3,,A92023,ffffff
+137,1,137,modified - WF+ (Reading-Wakefield-Malden),,3,,A92023,ffffff
+40,1,40,modified - WF+ (Readville-Germantown-West Roxbury-Forest Hills),,3,,066A40,ffffff
+78,1,78,- WF+ (Arlmont Village-Harvard),,3,,C9500E,ffffff
+54,1,54,- WF (Arlington-Waltham),,3,,5A8400,ffffff
+749,1,SL5,- HF2 (Nubian-South Station),,3,,7c878e,ffffff
+111,1,T111,- HF (Woodlawn-Chelsea-Haymarket),,3,,613FA6,ffffff
+501,1,501,- XF2 (Brighton-Downtown),,3,,613FA6,ffffff
+202,1,202,- XF (Fields Corner Loop via Adams Street),,3,,ac7e00,ffffff
+66,1,T66,modified - HF (Harvard-Allston-Nubian),,3,,A72051,ffffff
+80,1,80,modified - WF+ (Burlington-Woburn-Arlington-Davis),,3,,5A8400,ffffff
+110,1,T110,- HF (Wellington-Everett-Wonderland),,3,,5A8400,ffffff
+226,1,226,- WF+ (Columbian Square-Braintree),,3,,613FA6,ffffff
+36,1,36,modified - MF (Dedham Mall-VA Hospital-Forest Hills),,3,,613FA6,ffffff
+68,1,68,- XF (Harvard-Kendall/MIT),,3,,ac7e00,ffffff
+18,1,18,modified - YF (Ashmont-JFK/UMass),,3,,613FA6,ffffff
+450,1,450,modified - MF (Salem-Lynn-Wonderland),,3,,066A40,ffffff
+436,1,436,modified - WF+ (Liberty Tree Mall-Lynnfield-Lynn),,3,,A92023,ffffff
+55,1,55,modified - WF+YF (Fenway-Copley),,3,,613FA6,ffffff
+716,1,716,- YF (Cobbs Corner-Canton-Mattapan),,3,,613FA6,ffffff
+77,1,T77,- HF (Arlington-Porter-Harvard),,3,,5A8400,ffffff
+Boat-F4,1,,Charlestown Ferry,Ferry,4,https://www.mbta.com/schedules/Boat-F4,008EAA,FFFFFF
+Boat-F1,1,,Hingham/Hull Ferry,Ferry,4,https://www.mbta.com/schedules/Boat-F1,008EAA,FFFFFF
+Boat-EastBoston,1,,East Boston Ferry,Ferry,4,https://www.mbta.com/schedules/Boat-EastBoston,008EAA,FFFFFF
+Boat-Lynn,1,,Lynn Ferry,Ferry,4,https://www.mbta.com/schedules/Boat-Lynn,008EAA,FFFFFF
+Boat-F6,1,,Winthrop/Quincy Ferry,Ferry,4,https://www.mbta.com/schedules/Boat-F6,008EAA,FFFFFF
+Red,1,,Red Line,Rapid Transit,1,https://www.mbta.com/schedules/Red,DA291C,FFFFFF
+Mattapan,1,,Mattapan Trolley,Rapid Transit,1,https://www.mbta.com/schedules/Mattapan,DA291C,FFFFFF
+Orange,1,,Orange Line,Rapid Transit,1,https://www.mbta.com/schedules/Orange,ED8B00,FFFFFF
+Green-B,1,B,Green Line B,Rapid Transit,1,https://www.mbta.com/schedules/Green-B,00843D,FFFFFF
+Green-C,1,C,Green Line C,Rapid Transit,1,https://www.mbta.com/schedules/Green-C,00843D,FFFFFF
+Green-D,1,D,Green Line D,Rapid Transit,1,https://www.mbta.com/schedules/Green-D,00843D,FFFFFF
+Green-E,1,E,Green Line E,Rapid Transit,1,https://www.mbta.com/schedules/Green-E,00843D,FFFFFF
+Blue,1,,Blue Line,Rapid Transit,1,https://www.mbta.com/schedules/Blue,003DA5,FFFFFF
+CR-Fairmount,1,,Fairmount Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Fairmount,80276C,FFFFFF
+CR-Fitchburg,1,,Fitchburg Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Fitchburg,80276C,FFFFFF
+CR-Worcester,1,,Framingham/Worcester Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Worcester,80276C,FFFFFF
+CR-Franklin,1,,Franklin/Foxboro Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Franklin,80276C,FFFFFF
+CR-Greenbush,1,,Greenbush Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Greenbush,80276C,FFFFFF
+CR-Haverhill,1,,Haverhill Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Haverhill,80276C,FFFFFF
+CR-Kingston,1,,Kingston Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Kingston,80276C,FFFFFF
+CR-Lowell,1,,Lowell Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Lowell,80276C,FFFFFF
+CR-Middleborough,1,,Middleborough/Lakeville Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Middleborough,80276C,FFFFFF
+CR-Needham,1,,Needham Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Needham,80276C,FFFFFF
+CR-Newburyport,1,,Newburyport/Rockport Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Newburyport,80276C,FFFFFF
+CR-Providence,1,,Providence/Stoughton Line,Commuter Rail,2,https://www.mbta.com/schedules/CR-Providence,80276C,FFFFFF
+CR-Foxboro,1,,Foxboro Event Service,Commuter Rail,2,https://www.mbta.com/schedules/CR-Foxboro,80276C,FFFFFF
+CapeFlyer,3,,CapeFLYER,Commuter Rail,2,http://capeflyer.com/,006595,FFFFFF
+CR: FALL River,,Fall River,Fall River,,2,,,

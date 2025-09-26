@@ -1,0 +1,133 @@
+stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon,location_type
+1,BH,"Blandin Hub",15 Blandin Ave Hub,42.275875,-71.411844,0
+2,N38,"Mathworks Lakeside Speen St",,42.302639,-71.375850,0
+3,F88,"Cloverleaf Mall",Burlington Aldi,42.303635,-71.378503,0
+4,N21,"Natick Mall - Wegmans",Natick Mall- Wegmans,42.301467,-71.386351,0
+5,F25,"Shoppers World Shelter",,42.299806,-71.394922,0
+6,F26,"Kohls",,42.302968,-71.397203,0
+7,F67,"BJs Wholesale Club",,42.306957,-71.399090,0
+8,F43,"Walmart",,42.300242,-71.400487,0
+9,F73,"Concord St/ Anzio Rd",,42.293092,-71.409180,0
+10,F15,"MetroWest Medical Center",,42.284385,-71.420043,0
+11,F54,"Franklin / Mt. Wayte",,42.290063,-71.428665,0
+12,F56,"Banana Lot/Intermodal Center",Framingham MBTA (Rear),42.277084,-71.417529,0
+13,F11,"Framingham State University",,42.297730,-71.437230,0
+14,F77,"Mass Bay Framingham",,42.290298,-71.429520,0
+15,W18,"MassBay Community College",,42.311932,-71.262961,0
+16,MF6,"Milford Crossing",,42.149921,-71.488361,0
+17,HL2,"Mission Springs",,42.179225,-71.444045,0
+18,HL1,"Holliston Public Library",,42.200706,-71.429371,0
+19,A4,"Shaws Supermarket",,42.240777,-71.432533,0
+20,A3,"Market Basket",,42.257457,-71.426943,0
+21,F68,"Memorial House (Winthrop & Hollis)",,42.270069,-71.419979,0
+22,F02,"Framingham MBTA Station",,42.276555,-71.417774,0
+23,F58,"The Green at 9 and 90 Rear Parking",,42.293592,-71.470822,0
+24,F34,"High St",,42.300134,-71.435702,0
+25,F40,"Flutie Pass Park and Ride",,42.300721,-71.390905,0
+26,N20,"9/27 Shopping Plaza",,42.301094,-71.359134,0
+27,W1,"Oak St",,42.303611,-71.331970,0
+28,W19,"Weston Rd",,42.305336,-71.312662,0
+29,W5,"Woodland MBTA Train Station",,42.333181,-71.243103,0
+30,MF15,"Milford Regional Medical Center",,42.132698,-71.528843,0
+31,MF16,"Milford Shaws/Wallgreens",,42.138221,-71.534690,0
+32,MF28,"Milford District Court",,42.140719,-71.536297,0
+33,MF18,"Milford High School",,42.150858,-71.532409,0
+34,MF19,"Colonial Rd Capital Rd Housing",,42.156893,-71.537067,0
+35,MF22,"Birmingham Court",,42.151199,-71.518674,0
+36,MF5,"Milford Library",,42.144004,-71.523115,0
+37,MF10,"Milford Town Hall- Route 14",,42.142457,-71.517996,0
+38,MF23,"Hannafords Plaza/ CVS",,42.150182,-71.502209,0
+39,MF24,"Milford Kohls",,42.147858,-71.489391,0
+40,F51,"Beaver St & Second St",,42.274105,-71.402115,0
+41,F66,"Tarelli Ter/Waverly St",,42.279805,-71.403112,0
+42,F04,"Bethany Hill",,42.268521,-71.432618,0
+43,MF26,"Spruce St",,42.142207,-71.519333,0
+44,MB17,"Wayside Inn Store/ Hager St",,42.351638,-71.487585,0
+45,MB15,"Farm Road & Route 20",,42.347862,-71.508256,0
+46,MB14,"Post Road Shopping Center",,42.351793,-71.535998,0
+47,MB7,"Main St",,42.347161,-71.546460,0
+48,F28,"Flagg Dr/Normandy Rd",MassBay Community College,42.291257,-71.413544,0
+49,F29,"Rose Kennedy Lane",,42.290524,-71.413460,0
+50,N22,"Sherwood Plaza",,42.298829,-71.385415,0
+51,F22,"Super Stop and Shop",,42.305965,-71.401722,0
+52,F82,"Framingham High School",,42.319200,-71.400212,0
+53,F21,"Pinefield",,42.326150,-71.403328,0
+54,F20,"Nobscot Fire Station",,42.329558,-71.432253,0
+55,F85,"Edmands House",,42.329685,-71.437487,0
+56,F16,"Framingham Center",,42.300500,-71.434540,0
+57,F70,"Union Ave/ Lincoln St.",,42.285101,-71.421620,0
+58,F84,"Callahan Center",,42.293601,-71.427725,0
+59,F53,"McAuliffe Branch Library",,42.329304,-71.432337,0
+60,F42,"Arsenal Rd",,42.295707,-71.410650,0
+61,F30,"Lincoln St & Pearl St",,42.282087,-71.416022,0
+62,HP5,"South St & Hayward St",,42.205149,-71.545307,0
+63,HP3,"Hopkinton Center",,42.228263,-71.522133,0
+64,A6,"Ashland MBTA",,42.261381,-71.483038,0
+65,A5,"Cirrus Apartments",,42.256266,-71.478330,0
+66,F91,"Farm Pond Park",,42.280760,-71.431416,0
+67,F49,"The Green at 9 and 90",,42.293617,-71.469366,0
+68,HL4,"Holliston Congregational Church",,42.201486,-71.429172,0
+69,F14,"Staples Drive",,42.291077,-71.488357,0
+70,MB1,"Marlborough City Hall",,42.346873,-71.545838,0
+71,MB22,"Newton and Weed St",,42.346049,-71.550655,0
+72,F80,"Chapel Hill Apartments",,42.292845,-71.461966,0
+73,F12,"Stop and Shop",,42.297811,-71.448763,0
+74,F08,"Rt 9 East Park & Ride",,42.296406,-71.483633,0
+75,F13,"Rt 9 Park and Ride",,42.296407,-71.483515,0
+76,MB13,"Marlborough Hospital",,42.353744,-71.554882,0
+77,MB2,"Lincoln St & Pleasant St",,42.345905,-71.559561,0
+78,MB9,"Broad St / Lincoln St",,42.343862,-71.562938,0
+79,MB20,"Apex Entertainment",,42.338138,-71.589355,0
+80,MB18,"Hannafords Plaza Marlborough",,42.339746,-71.591600,0
+81,MB5,"Solomon Pond Mall",,42.355110,-71.612490,0
+82,F86,"Second St at Rec Center",,42.276673,-71.400084,0
+83,N23,"Sherwood Village on Mill St.",,42.288441,-71.383639,0
+84,N57,"Avenu at Natick",,42.301014,-71.379806,0
+85,N44,"Moran Park/Downtown MBTA",,42.285450,-71.347756,0
+86,N15,"Natick Common",,42.283780,-71.347290,0
+87,N16,"Leonard Morse Hospital",,42.280355,-71.334073,0
+88,N17,"Senior Center",,42.286106,-71.337616,0
+89,N30,"Coolidge Gardens",,42.280532,-71.347079,0
+90,N29,"Cedar Terrace",,42.272928,-71.355696,0
+91,N28,"Cedar Gardens",,42.273839,-71.355359,0
+92,N27,"Roche Bros.",,42.282056,-71.376886,0
+93,A2,"Ashland High School",,42.250580,-71.472433,0
+94,HP4,"Route 85 & Route 135",,42.228462,-71.521940,0
+95,HP6,"PriceChopper Hopkinton",,42.209604,-71.551598,0
+96,MB10,"Boston Scientific Way",,42.362844,-71.560791,0
+97,S10,"Southborough MBTA Station",,42.267514,-71.523438,0
+98,F57,"Franklin St & Proctor St",,42.279632,-71.418779,0
+99,H1,"Hudson WalMart",Hudson Walmart,42.374993,-71.559090,0
+100,H2,"Hudson Stop and Shop",,42.378091,-71.563338,0
+101,H4,"Hudson Senior Center",,42.393239,-71.566775,0
+102,H5,"Machado House",,42.394800,-71.567289,0
+103,H8,"Highland Common- Market Basket",,42.396663,-71.595115,0
+104,Ne1,"Lower Falls (Washington St/Concord St)",,42.325339,-71.257917,0
+105,W15,"Babson College (Knight Lot)",,42.299521,-71.268435,0
+106,W13,"Cross St (Central St/Cross St)",,42.296052,-71.296781,0
+107,F65,"Arlington St/Waushakum St",,42.271221,-71.417529,0
+108,MF7,"Milford Target",,42.160471,-71.499905,0
+109,MF8,"Maher Court",,42.147563,-71.511732,0
+110,MF9,"East Main St Shelter at Beech St",,42.143640,-71.513349,0
+111,MF11,"Milford Senior Center",,42.140845,-71.515482,0
+112,MF12,"Milford Police and Post Office",,42.139082,-71.521175,0
+113,MF13,"Fruit St / S. Mail St",,42.133481,-71.520771,0
+114,MF14,"EMK Community Health",,42.127417,-71.518800,0
+115,N36,"Mathworks Apple Hill RT9",,42.300621,-71.350235,0
+116,F05,"Concord St & Howard St/Downtown Common",,42.277650,-71.416779,0
+117,F59,"500 Staples Dr rear Entrance",,42.290792,-71.492766,0
+118,F55,"New York Ave",,42.299840,-71.488205,0
+119,S5,"Central St / Cherry St",,42.296227,-71.506325,0
+120,S2,"White Bagley Rd & Boston Rd",,42.304476,-71.516147,0
+121,S3,"Downtown Southborough",,42.305753,-71.526023,0
+122,MB6,"Maple St / Walker St",,42.333138,-71.541075,0
+123,MB8,"Academy Knoll Apartments",,42.341978,-71.560480,0
+124,MB21,"Target Marlborough",,42.348116,-71.504625,0
+125,F78,"Water View Village",,42.296809,-71.451488,0
+126,F79,"Bayberry Hill Estates",,42.296457,-71.399192,0
+127,Ne2,"Riverside Station",,42.337041,-71.251776,0
+128,F87,"Newfield Drive West Central St",,42.281991,-71.389547,0
+129,S8,"Central St & Route 30",,42.302183,-71.509606,0
+130,MB12,"Maple St / S. Mill St",,42.331905,-71.541039,0
+131,N52,"Kendall Plaza",,42.282588,-71.392225,0
+132,N33,"Kansas St & Route 27",,42.291510,-71.356400,0
