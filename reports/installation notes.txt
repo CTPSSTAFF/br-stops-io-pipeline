@@ -1,0 +1,11 @@
+# Extra installation notes
+
+install.packages("devtools")
+
+install.packages("Rtools")
+
+devtools::install_github("jeffjjohnston/RStudioConsoleRender")
+
+https://cran.r-project.org/bin/windows/Rtools/
+
+Run Markdown Notebook with Ctrl+Shift+K
