@@ -6,14 +6,23 @@ from dbfread import DBF
 import dbf
 from pathlib import Path
 
-def resolve_path(path_template, config):
+def resolve_path(path_template, config, script_dir):
     """
-    Replaces placeholders in a path template with values from the config.
-    This function can handle both {base_path} and {shared_drive_path}.
+    Replaces placeholders in a path template and resolves it relative to the script directory.
+    - {shared_drive_path} is replaced with the value from the config.
+    - If the resulting path is relative, it's joined with the script's directory.
     """
-    resolved_path = path_template.replace("{base_path}", config.get("base_path", ""))
-    resolved_path = resolved_path.replace("{shared_drive_path}", config.get("shared_drive_path", ""))
-    return resolved_path
+    # First, handle the shared drive path placeholder, if it exists
+    resolved_path_str = path_template.replace("{shared_drive_path}", config.get("shared_drive_path", ""))
+    
+    # Convert to a Path object to check if it's absolute
+    path_obj = Path(resolved_path_str)
+    
+    # If the path is not absolute, join it with the script's directory
+    if not path_obj.is_absolute():
+        return script_dir / path_obj
+    return path_obj
+
 
 def save_dataframe_to_dbf(df, output_path):
     """Saves a pandas DataFrame to a DBF file, handling column types and name lengths."""
@@ -33,7 +42,7 @@ def save_dataframe_to_dbf(df, output_path):
             elif pd.api.types.is_bool_dtype(dtype): field_specs.append(f'{col} L')
             else: field_specs.append(f'{col} C(254)')
         dbf_structure_string = '; '.join(field_specs)
-        table = dbf.Table(output_path, dbf_structure_string, codepage='utf8')
+        table = dbf.Table(str(output_path), dbf_structure_string, codepage='utf8')
         table.open(mode=dbf.READ_WRITE)
         for record in df_for_dbf.to_dict('records'):
             table.append(record)
@@ -42,10 +51,10 @@ def save_dataframe_to_dbf(df, output_path):
     except Exception as e:
         print(f"-> FATAL ERROR: Could not save the final DBF file: {e}")
 
-def process_run_mode(run_config, config):
+def process_run_mode(run_config, config, script_dir):
     """Main logic to process a run mode defined in the config."""
 
-    master_dbf_path = resolve_path(run_config['baseline_dbf_file'], config)
+    master_dbf_path = resolve_path(run_config['baseline_dbf_file'], config, script_dir)
     join_key_master = run_config['join_key_master']
     join_key_csv = run_config['join_key_csv']
 
@@ -72,7 +81,7 @@ def process_run_mode(run_config, config):
                 source_join_key = source.get('join_key_source', join_key_csv)
 
                 # --- Process Employment Data ---
-                emp_csv_path = resolve_path(source['emp_csv'], config)
+                emp_csv_path = resolve_path(source['emp_csv'], config, script_dir)
                 print(f"  -> Reading employment source: {os.path.basename(emp_csv_path)}")
                 df_empl_source = pd.read_csv(emp_csv_path)
                 emp_value_col = source['emp_value_col']
@@ -81,7 +90,7 @@ def process_run_mode(run_config, config):
                 all_emp_dfs.append(df_empl_agg)
 
                 # --- Process Population Data ---
-                pop_csv_path = resolve_path(source['pop_csv'], config)
+                pop_csv_path = resolve_path(source['pop_csv'], config, script_dir)
                 print(f"  -> Reading population source: {os.path.basename(pop_csv_path)}")
                 df_pop_source = pd.read_csv(pop_csv_path)
                 if source['pop_agg_method'] == 'size':
@@ -121,7 +130,7 @@ def process_run_mode(run_config, config):
             print(f"-> WARNING: Could not process dataset for {year}. Skipping. Error: {e}")
             continue
             
-    output_path = resolve_path(run_config['output_file'], config)
+    output_path = resolve_path(run_config['output_file'], config, script_dir)
     save_dataframe_to_dbf(df_merged, output_path)
 
 def main():
@@ -130,7 +139,12 @@ def main():
     parser.add_argument("--run_mode", required=True, help="The specific run mode (e.g., '2025AugRun') to execute from the config file.")
     args = parser.parse_args()
     
-    config_file = 'pipeline_config.json'
+    # Get the absolute path to the directory where this script is located
+    script_dir = Path(__file__).resolve().parent
+    
+    # The config file is expected to be in the same directory as the script
+    config_file = script_dir / 'pipeline_config.json'
+    
     try:
         with open(config_file, 'r') as f:
             config = json.load(f)
@@ -144,7 +158,8 @@ def main():
 
     if target_config:
         print(f"Starting process for run mode: '{run_mode_arg}'")
-        process_run_mode(target_config, config)
+        # Pass the script directory to the processing function
+        process_run_mode(target_config, config, script_dir)
     else:
         print(f"FATAL ERROR: Run mode '{run_mode_arg}' not found in '{config_file}'.")
         return
