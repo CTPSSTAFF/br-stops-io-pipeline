@@ -1,14 +1,13 @@
 @echo off
-TITLE GTFS Filter
+TITLE GTFS Filter and Installer
 
-:: This batch file checks for a Conda environment, creates it if it doesn't exist,
-:: and then activates it to run the Python script.
+:: This batch file ensures the 'brstops_env' Conda environment exists
+:: and has the necessary packages, then runs the Python script.
 
 ECHO Checking for Conda environment 'brstops_env'...
 ECHO.
 
-:: Check if the Conda environment exists by attempting to activate it.
-:: This check is more reliable than parsing the output of `conda env list`.
+:: Check if the Conda environment exists.
 conda env list | findstr /R "\<brstops_env\>" >nul
 if %errorlevel% neq 0 (
     ECHO Conda environment 'brstops_env' not found. Creating it now...
@@ -21,24 +20,33 @@ if %errorlevel% neq 0 (
         ECHO ####################################################################
         GOTO :end
     )
-    ECHO Environment created. Installing required packages...
-    ECHO.
-    call conda activate brstops_env
-    pip install gtfs-kit
-    if %errorlevel% neq 0 (
-        ECHO ####################################################################
-        ECHO ## FATAL ERROR: Failed to install 'gtfs-kit'.
-        ECHO ## Please check your internet connection and try again.
-        ECHO ####################################################################
-        GOTO :end
-    )
 )
 
 ECHO Activating Conda environment 'brstops_env'...
 ECHO.
 call conda activate brstops_env
+if %errorlevel% neq 0 (
+    ECHO ####################################################################
+    ECHO ## FATAL ERROR: Failed to activate conda environment 'brstops_env'.
+    ECHO ####################################################################
+    GOTO :end
+)
 
-ECHO Environment activated successfully.
+ECHO Environment activated.
+ECHO Ensuring 'gtfs-kit' package is installed...
+ECHO.
+
+:: This command runs every time to ensure gtfs-kit is installed.
+pip install gtfs-kit
+if %errorlevel% neq 0 (
+    ECHO ####################################################################
+    ECHO ## FATAL ERROR: Failed to install 'gtfs-kit'.
+    ECHO ## Please check your internet connection and try again.
+    ECHO ####################################################################
+    GOTO :end
+)
+
+ECHO Package installation complete.
 ECHO.
 
 :: Prompt the user to enter the subfolder name.
@@ -57,7 +65,7 @@ ECHO  Running script for subfolder: %input_subfolder%
 ECHO ========================================================
 ECHO.
 
-:: Execute the Python script, passing the user's input as a command-line argument.
+:: Execute the Python script.
 python gtfs_splitter.py ".\%input_subfolder%"
 
 ECHO.
