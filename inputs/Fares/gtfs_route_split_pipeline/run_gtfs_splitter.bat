@@ -4,6 +4,11 @@ TITLE GTFS Filter and Installer
 :: This batch file ensures the 'brstops_env' Conda environment exists
 :: and has the necessary packages, then runs the Python script.
 
+:: ===================================================================
+::  Define required packages
+:: ===================================================================
+set PIP_PACKAGES=dbfread dbf pandas
+
 ECHO Checking for Conda environment 'brstops_env'...
 ECHO.
 
@@ -37,7 +42,8 @@ ECHO Ensuring 'gtfs-kit' package is installed...
 ECHO.
 
 :: This command runs every time to ensure gtfs-kit is installed.
-pip install gtfs-kit
+ECHO --- Installing Pip packages ---
+pip install %PIP_PACKAGES%
 if %errorlevel% neq 0 (
     ECHO ####################################################################
     ECHO ## FATAL ERROR: Failed to install 'gtfs-kit'.
@@ -46,7 +52,15 @@ if %errorlevel% neq 0 (
     GOTO :end
 )
 
-ECHO Package installation complete.
+ECHO Package verification complete.
+ECHO.
+
+:: ===================================================================
+::  Clear the terminal screen
+:: ===================================================================
+cls
+
+ECHO All packages are ready.
 ECHO.
 
 :: Prompt the user to enter the subfolder name.
