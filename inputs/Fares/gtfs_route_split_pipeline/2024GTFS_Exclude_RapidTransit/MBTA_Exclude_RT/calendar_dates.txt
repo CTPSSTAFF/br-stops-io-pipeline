@@ -1,0 +1,67 @@
+service_id,date,exception_type,holiday_name
+BUS42024-hbg44rd1-Weekday-02,20241014,2,Indigenous People's Day
+BUS42024-hbs44sw1-Weekday-02,20241014,2,Indigenous People's Day
+FallWeekday,20241014,2,Indigenous People's Day
+IndigenousPeoplesDay,20241014,1,Indigenous People's Day
+PRIV42024-hpa44011-Weekday-01,20241014,2,Indigenous People's Day
+PRIV42024-hpa44016-Saturday-01,20241014,1,Indigenous People's Day
+PRIV42024-hpj44011-Weekday-01,20241014,2,Indigenous People's Day
+PRIV42024-hpj44016-Saturday-01,20241014,1,Indigenous People's Day
+SPRING2024-SOUTHSUN-Sunday-64,20241027,1,
+BUS42024-hbg44rd1-Weekday-02,20241111,2,Veterans Day
+BUS42024-hbs44sn1-Weekday-02,20241111,1,Veterans Day
+BUS42024-hbs44sw1-Weekday-02,20241111,2,Veterans Day
+FallWeekday,20241111,2,Veterans Day
+VeteransDay-DayafterThanksgivingDay,20241111,1,Veterans Day
+BUS42024-hbs44sw1-Weekday-02,20241125,2,
+BUS42024-hbs44sw1-Weekday-02,20241126,2,
+BUS42024-hbs44sw1-Weekday-02,20241127,2,
+BUS42024-hbg44wk1-Weekday-02,20241128,2,Thanksgiving Day
+BUS42024-hbs44sw1-Weekday-02,20241128,2,Thanksgiving Day
+Boat-F1-Weekday-Fall-24,20241128,2,Thanksgiving Day
+Boat-F4-Weekday-Fall-24,20241128,2,Thanksgiving Day
+FallWeekday,20241128,2,Thanksgiving Day
+PRIV42024-hpa44011-Weekday-01,20241128,2,Thanksgiving Day
+PRIV42024-hpj44011-Weekday-01,20241128,2,Thanksgiving Day
+PRIV42024-hpj44017-Sunday-01,20241128,1,Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1,20241128,1,Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-S85407dc6,20241128,1,Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-S859962ef,20241128,1,Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-Sb0e4ed14,20241128,1,Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-Sb7371956,20241128,1,Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-Sc9a3b080,20241128,1,Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-Scbbf1ea5,20241128,1,Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-1,20241128,2,Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-1-S85407dc6,20241128,2,Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-1-Sb7371956,20241128,2,Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-1-Scbbf1ea5,20241128,2,Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-15-Sb4,20241128,2,Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-31-S8f,20241128,2,Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-31-Sc0,20241128,2,Thanksgiving Day
+ThanksgivingDay,20241128,1,Thanksgiving Day
+BUS42024-hbg44rd1-Weekday-02,20241129,2,Day after Thanksgiving Day
+BUS42024-hbs44sf1-Weekday-02,20241129,1,Day after Thanksgiving Day
+BUS42024-hbs44sw1-Weekday-02,20241129,2,Day after Thanksgiving Day
+Boat-EastBoston-Weekday-Fall-24,20241129,1,Day after Thanksgiving Day
+Boat-F6-Weekday-Fall-24,20241129,1,Day after Thanksgiving Day
+FallWeekday,20241129,2,Day after Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1,20241129,1,Day after Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-S85407dc6,20241129,1,Day after Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-S859962ef,20241129,1,Day after Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-Sb0e4ed14,20241129,1,Day after Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-Sb7371956,20241129,1,Day after Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-Sc9a3b080,20241129,1,Day after Thanksgiving Day
+SPRING2024-SOUTHSUN-Sunday-1-Scbbf1ea5,20241129,1,Day after Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-1,20241129,2,Day after Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-1-S85407dc6,20241129,2,Day after Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-1-Sb7371956,20241129,2,Day after Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-1-Scbbf1ea5,20241129,2,Day after Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-15-Sb4,20241129,2,Day after Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-31-S8f,20241129,2,Day after Thanksgiving Day
+SPRING2024-SOUTHWKD-Weekday-31-Sc0,20241129,2,Day after Thanksgiving Day
+VeteransDay-DayafterThanksgivingDay,20241129,1,Day after Thanksgiving Day
+BUS42024-hbs44sw6-Saturday-02,20241207,1,
+BUS42024-hbs44sw7-Sunday-02,20241208,1,
+BUS42024-hbg44wk1-Weekday-02,20241209,1,
+BUS42024-hbg44wk1-Weekday-02,20241213,1,
+BUS42024-hbs44sw6-Saturday-02,20241214,1,

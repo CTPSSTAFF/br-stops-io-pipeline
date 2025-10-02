@@ -1,0 +1,9 @@
+route_id,agency_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color
+Red,1,,Red Line,Rapid Transit,1,https://www.mbta.com/schedules/Red,DA291C,FFFFFF
+Mattapan,1,,Mattapan Trolley,Rapid Transit,1,https://www.mbta.com/schedules/Mattapan,DA291C,FFFFFF
+Orange,1,,Orange Line,Rapid Transit,1,https://www.mbta.com/schedules/Orange,ED8B00,FFFFFF
+Green-B,1,B,Green Line B,Rapid Transit,1,https://www.mbta.com/schedules/Green-B,00843D,FFFFFF
+Green-C,1,C,Green Line C,Rapid Transit,1,https://www.mbta.com/schedules/Green-C,00843D,FFFFFF
+Green-D,1,D,Green Line D,Rapid Transit,1,https://www.mbta.com/schedules/Green-D,00843D,FFFFFF
+Green-E,1,E,Green Line E,Rapid Transit,1,https://www.mbta.com/schedules/Green-E,00843D,FFFFFF
+Blue,1,,Blue Line,Rapid Transit,1,https://www.mbta.com/schedules/Blue,003DA5,FFFFFF

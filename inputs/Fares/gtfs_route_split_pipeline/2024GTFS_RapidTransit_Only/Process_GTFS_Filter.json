@@ -1,0 +1,15 @@
+{
+    "input_gtfs_folder_name": "MBTA",
+    "output_gtfs_folder_name": "MBTA_RT_Only",
+    "routes_to_include": [
+        "Red",
+        "Mattapan",
+        "Orange",
+        "Green-B",
+        "Green-C",
+        "Green-D",
+        "Green-E",
+        "Blue"
+    ],
+    "routes_to_exclude": []
+}

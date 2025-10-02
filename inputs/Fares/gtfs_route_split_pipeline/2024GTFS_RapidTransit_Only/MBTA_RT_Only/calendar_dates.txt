@@ -1,0 +1,30 @@
+service_id,date,exception_type,holiday_name
+LRV42024-hlm44011-Weekday-01,20241004,2,
+LRV42024-hlb44016-Saturday-01,20241005,2,
+LRV42024-hlm44016-Saturday-01,20241005,2,
+LRV42024-hlb44017-Sunday-01,20241006,2,
+LRV42024-hlm44017-Sunday-01,20241006,2,
+RTL42024-hmo44011-Weekday-01,20241008,2,
+RTL42024-hmo44011-Weekday-01,20241009,2,
+RTL42024-hmo44011-Weekday-01,20241010,2,
+RTL42024-hmo44011-Weekday-01,20241011,2,
+RTL42024-hmo44016-Saturday-01,20241012,2,
+RTL42024-hmo44017-Sunday-01,20241013,2,
+IndigenousPeoplesDay,20241014,1,Indigenous People's Day
+LRV42024-hlb44011-Weekday-01,20241014,2,Indigenous People's Day
+LRV42024-hlm44011-Weekday-01,20241014,2,Indigenous People's Day
+RTL42024-hmb44011-Weekday-01,20241014,2,Indigenous People's Day
+RTL42024-hmo44011-Weekday-01,20241014,2,Indigenous People's Day
+RTL42024-hms44sp1-Weekday-01,20241014,2,Indigenous People's Day
+RTL42024-hmo44011-Weekday-01,20241015,2,
+RTL42024-hmo44011-Weekday-01,20241016,2,
+RTL42024-hmo44011-Weekday-01,20241017,2,
+RTL42024-hmo44011-Weekday-01,20241018,2,
+RTL42024-hmo44016-Saturday-01,20241019,2,
+RTL42024-hmo44017-Sunday-01,20241020,2,
+LRV42024-hlb44011-Weekday-01,20241128,2,Thanksgiving Day
+LRV42024-hlm44011-Weekday-01,20241128,2,Thanksgiving Day
+RTL42024-hmb44011-Weekday-01,20241128,2,Thanksgiving Day
+RTL42024-hmo44011-Weekday-01,20241128,2,Thanksgiving Day
+RTL42024-hms44sp1-Weekday-01,20241128,2,Thanksgiving Day
+ThanksgivingDay,20241128,1,Thanksgiving Day
