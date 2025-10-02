@@ -4,7 +4,7 @@ TITLE TAZ Data Processor (Optimized)
 :: ===================================================================
 ::  1. Define required packages
 :: ===================================================================
-@REM set CONDA_PACKAGES=python=3.9  
+@REM set CONDA_PACKAGES=python=3.12
 :: The 'import dbf' module is provided by the 'pysal-dbf' package
 set PIP_PACKAGES=dbfread dbf pandas
 
@@ -17,7 +17,7 @@ conda env list | findstr /B "brstops_env " > NUL
 if %errorlevel% neq 0 (
     ECHO Environment 'brstops_env' not found. Creating it now...
     ECHO This may take several minutes.
-    conda create --name brstops_env python=3.9 -y
+    conda create --name brstops_env python=3.12 -y
     @REM conda create --name brstops_env %CONDA_PACKAGES% -c conda-forge -y
     if %errorlevel% neq 0 (
         ECHO ####################################################################

@@ -7,7 +7,7 @@ TITLE GTFS Filter and Installer
 :: ===================================================================
 ::  Define required packages
 :: ===================================================================
-set PIP_PACKAGES=dbfread dbf pandas
+set PIP_PACKAGES=gtfs-kit
 
 ECHO Checking for Conda environment 'brstops_env'...
 ECHO.
@@ -17,7 +17,7 @@ conda env list | findstr /R "\<brstops_env\>" >nul
 if %errorlevel% neq 0 (
     ECHO Conda environment 'brstops_env' not found. Creating it now...
     ECHO.
-    conda create --name brstops_env python=3.9 -y
+    conda create --name brstops_env python=3.12 -y
     if %errorlevel% neq 0 (
         ECHO ####################################################################
         ECHO ## FATAL ERROR: Failed to create conda environment 'brstops_env'.
