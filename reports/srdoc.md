@@ -44,6 +44,79 @@ flowchart TD
 ### File Outputs
 - `reports/Summary_HTML_Report/BostonRegionalSTOPS_Summary.html` — Final rendered HTML report written by the knit hook.
 
+* Summary_HTML_Report TOC
+```markdown
+  - 1.0 r HTMLTitle
+  - 2.0 Settings & Inputs
+      - 2.1 Primary Settings {.tabset}
+      - 2.2 GTFS Network
+          - 2.2.1 Routes
+          - 2.2.2 GTFS Connectors
+      - 2.3 Tabulation & Calibration Setups
+          - 2.3.1 Districts
+          - 2.3.2 Station Groups
+      - 2.4 District Map
+      - 2.5 Population & Employment
+          - 2.5.1 Corridor-Level
+          - 2.5.2 Regional-Level
+      - 2.6 Auto Speeds
+      - 2.7 Demand Data
+          - 2.7.1 Consistency of Ridership Information
+          - 2.7.2 Transit Trip Targets
+  - 3.0 Existing Conditions & Calibration Results
+      - 3.1 Calibration Settings
+          - 3.1.1 CTPP and Station Group Calibration Settings
+          - 3.1.2 Fixed-Guideway Settings (FGS)
+      - 3.2 Regional Adjustment Factor & Unlinked Trips
+      - 3.3 Linked Trips
+          - 3.3.1 By Trip Purpose
+          - 3.3.2 By Auto Ownership
+      - 3.4 District-to-District (D2D) Flows
+      - 3.5 Linked Trips By Mode of Access
+      - 3.6 Systemwide Transfer Rate
+      - 3.7 Modal Shares (Overall)
+      - 3.8 Station Group Calibration Factors
+      - 3.9 Corridor Route-Level Boardings
+      - 3.10 Mode of Access at Stations
+  - 4.0 No-Build Assumptions & Results
+      - 4.1 Changes in Assumptions
+          - 4.1.1 Population & Employment
+          - 4.1.2 Changes in Auto Speeds
+          - 4.1.3 Transit Service Levels
+          - 4.1.4 Park-Ride Lots
+      - 4.2 Incremental Transit Trips (No Build - Existing)
+      - 4.3 Ridership Responses (Loading/Assignment Data)
+          - 4.3.1 Route-Level Boardings
+          - 4.3.2 Mode of Access at Stations
+  - 5.0 Build Assumptions & Results
+      - 5.1 Changes in Assumptions
+          - 5.1.1 Population & Employment
+          - 5.1.2 Auto Speeds
+          - 5.1.3 Transit Service Levels
+          - 5.1.4 Park-Ride Lots
+      - 5.2 Project Trips
+      - 5.3 Ridership Responses (Loading/Assignment Data)
+          - 5.3.1 Project Station-to-Station Flows
+          - 5.3.2 Mode of Access at Stations
+          - 5.3.3 Route-Level Boardings
+      - 5.4 Incremental Transit Trips (Build - No Build)
+      - 5.5 Incremental VMT (Build - No Build)
+      - 5.6 Capital Investment Grant (CIG) Metrics
+  - 6.0 Technical Appendix
+      - 6.1 Station Boardings by Mode of Access (Daily)
+      - 6.2 Route-Level Boardings by Production-End Mode-of-Access (Daily)
+      - 6.3 Route-Level Boardings by Station Group (Daily)
+      - 6.4 Route-Level Trips, Miles and Hours
+          - 6.4.1 Peak Period
+          - 6.4.2 Off-Peak Period
+      - 6.5 Route-Level Boardings by Route Specific Mode-of-Access (Daily)
+      - 6.6 Route-to-Route Transfers (Daily)
+      - 6.7 Summary of Linked Transit Trips Trips
+      - 6.8 Project Station-to-Station Flows
+  - References
+```
+
+
 ### Input/Output Sequence
 ```mermaid
 sequenceDiagram
