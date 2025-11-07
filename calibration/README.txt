@@ -70,3 +70,36 @@ Manual edits may be needed for any such changes.
 	
 7.	Review Results:
 	Your renamed calibration file is now ready for review and distribution.
+
+
+
+
+
+
+	Lookup from Table_numbers to names 
+========================
+  2.04  Station Group Boardings Prior to Adjustment
+  2.05  Station Group Boarding Factor for Application to Later Iterations
+  4.01  WEEKDAY LINKED TRANSIT TRIPS (All Transit / All Car HH)
+  6.01  WEEKDAY LINKED TRANSIT TRIPS (All Transit / 0 Car HH)
+  9.01  AVG WEEKDAY STATION UTILIZATION (All Transit / All Car HH)
+  10.01 AVG WEEKDAY ROUTE UTILIZATION – Zone by Production-End Access Type
+  10.03 PEAK Trips, Miles, and Hours by Route
+  10.04 Off-Peak Trips, Miles, and Hours by Route
+  10.05 AVG WEEKDAY ROUTE UTILIZATION – by Route Access Type
+  10.06 AVG WEEKDAY Route-to-Route Transfers
+  11.01 SUMMARY OF TRIPS BY Submode, Access Mode, Auto Ownership, and Scenario
+  11.02 SUMMARY OF TRIPS BY Submode, Access Mode, Auto Ownership, and Scenario
+  11.03 SUMMARY OF TRIPS BY Submode, Access Mode, Auto Ownership, and Scenario
+  11.04 SUMMARY OF TRIPS BY Submode, Access Mode, Auto Ownership, and Scenario
+  12.01 SUMMARY OF District-Level CTPP, Population, and Employment
+  13.01 UNWEIGHTED Avg Highway Time (minutes) for Z‑Z records with CTPP trips
+  13.07 UNWEIGHTED Avg Highway Speed (mph) for Z‑Z records with CTPP trips
+  13.08 UNWEIGHTED Avg Highway Speed (mph) for Z‑Z records with CTPP trips
+  282.01 WEEKDAY LINKED TRANSIT TRIPS (All Transit / 0 Car HH)
+  333.01 WEEKDAY LINKED TRANSIT TRIPS (Fixed Guideway Only / All Car HH)
+  337.01 WEEKDAY LINKED TRANSIT TRIPS (Fixed Guideway + Bus / All Car HH)
+  341.01 WEEKDAY LINKED TRANSIT TRIPS (Bus Only / All Car HH)
+  344.01 WEEKDAY LINKED TRANSIT TRIPS (All Transit / All Car HH)
+  345.01 WEEKDAY LINKED TRANSIT TRIPS (All Transit / All Car HH)
+  349.01 WEEKDAY LINKED TRANSIT TRIPS (All Fixed Guideway / All Car HH)
