@@ -1,10 +1,4 @@
-"""Utilities for duplicating the EvOSys lookup behavior.
-
-This module reads the EvOSys sheet definitions and reproduces the SUMIF
-calculations by combining the exported CSVs (`evo9_01.csv`, `evo10_01.csv`)
-with lookup metadata pulled directly from the workbook. The output is a CSV
-with two columns: ["Line", "Estimated"].
-"""
+"""Utilities for duplicating the EvOSys lookup behavior."""
 
 from __future__ import annotations
 
@@ -12,15 +6,17 @@ import argparse
 import csv
 import re
 import sys
-import zipfile
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
 
-import xml.etree.ElementTree as ET
+import sys
 
-NS = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
-REL_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from shop.base import WorkbookParser, format_number, to_number
 
 DEFAULT_CALIBRATION = Path("calibration/Boston_Regional_STOPS Calibration Report_2050.xlsx")
 DEFAULT_EVO9_CSV = Path("evo9_01.csv")
@@ -36,7 +32,7 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         "--calibration-workbook",
         type=Path,
         default=DEFAULT_CALIBRATION,
-        help="Workbook containing EvOSys/EvO9.01/EvO10.01 (default: 2050 report)",
+        help="Workbook containing EvOSys/EvO9.01/EvO10.01",
     )
     parser.add_argument(
         "--evosys-sheet",
@@ -47,19 +43,19 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         "--evo9-csv",
         type=Path,
         default=DEFAULT_EVO9_CSV,
-        help="CSV generated from EvO9.01 (default: evo9_01.csv)",
+        help="CSV generated from EvO9.01",
     )
     parser.add_argument(
         "--evo10-csv",
         type=Path,
         default=DEFAULT_EVO10_CSV,
-        help="CSV generated from EvO10.01 (default: evo10_01.csv)",
+        help="CSV generated from EvO10.01",
     )
     parser.add_argument(
         "--output",
         type=Path,
         default=Path("evosys_estimates.csv"),
-        help="Destination CSV path (default: evosys_estimates.csv)",
+        help="Destination CSV path",
     )
     return parser.parse_args(argv)
 
@@ -81,14 +77,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         line_totals = aggregate_by_label(line_map, stop_totals)
         group_totals = aggregate_by_label(group_map, stop_totals)
     else:
-        line_totals = group_totals = {}
+        line_totals = {}
+        group_totals = {}
 
     if need_evo10:
-        evo10_row_meta = load_evo10_row_meta(args.calibration_workbook, EVO1001_SHEET)
+        evo10_meta = load_evo10_row_meta(args.calibration_workbook, EVO1001_SHEET)
         route_totals, route_number_totals, mode_totals = load_evo10_totals(args.evo10_csv)
     else:
-        evo10_row_meta = {}
-        route_totals = route_number_totals = mode_totals = {}
+        evo10_meta = {}
+        route_totals = {}
+        route_number_totals = {}
+        mode_totals = {}
 
     rows: List[List[str]] = []
     missing: List[str] = []
@@ -96,10 +95,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         if spec["source"] == "EvO9.01":
             totals = line_totals if spec["reference"] == "C" else group_totals
             value = totals.get(spec["label"])
-        else:  # EvO10.01
+        else:
             value = evaluate_evo10_spec(
                 spec["cells"],
-                evo10_row_meta,
+                evo10_meta,
                 route_totals,
                 route_number_totals,
                 mode_totals,
@@ -131,19 +130,12 @@ def extract_line_specs(
     workbook_path: Path, sheet_name: str
 ) -> List[Dict[str, object]]:
     specs: List[Dict[str, object]] = []
-    with zipfile.ZipFile(workbook_path) as archive:
-        sheet = _load_sheet(archive, sheet_name)
-        shared = _load_shared_strings(archive)
-        sheet_data = sheet.find("m:sheetData", NS)
-        if sheet_data is None:
-            return specs
-
-        for row in sheet_data:
-            cells = _extract_row_cells(row, shared, include_formulas=True)
-            label = (cells.get(("A", "value")) or "").strip()
-            formula = cells.get(("D", "formula")) or ""
-            if not label or not formula:
+    with WorkbookParser(workbook_path) as parser:
+        for _, cells in parser.iter_rows(sheet_name, include_formulas=True):
+            label = (cells.get("A") or "").strip()
+            if not label:
                 continue
+            formula = cells.get(("D", "formula")) or ""
             if "EvO9.01" in formula and "SUMIF" in formula:
                 reference = "C" if "!C:C" in formula else "A" if "!A:A" in formula else None
                 if reference:
@@ -155,7 +147,7 @@ def extract_line_specs(
                         {
                             "label": label,
                             "source": "EvO10.01",
-                            "cells": [(col, int(row_num)) for col, row_num in cell_refs],
+                            "cells": [(col, int(idx)) for col, idx in cell_refs],
                         }
                     )
     return specs
@@ -177,37 +169,19 @@ def load_totals_by_stop(csv_path: Path) -> Dict[str, float]:
 def load_stop_mappings(
     workbook_path: Path, sheet_name: str
 ) -> Tuple[Dict[str, List[str]], Dict[str, List[str]]]:
-    line_assignments: Dict[str, str] = {}
-    group_assignments: Dict[str, str] = {}
-    with zipfile.ZipFile(workbook_path) as archive:
-        sheet = _load_sheet(archive, sheet_name)
-        shared = _load_shared_strings(archive)
-        sheet_data = sheet.find("m:sheetData", NS)
-        if sheet_data is None:
-            return {}, {}
-
-        for row in sheet_data:
-            cells = _extract_row_cells(row, shared)
-            stop_id = (cells.get(("H", "value")) or "").strip()
+    line_map: Dict[str, List[str]] = defaultdict(list)
+    group_map: Dict[str, List[str]] = defaultdict(list)
+    with WorkbookParser(workbook_path) as parser:
+        for _, cells in parser.iter_rows(sheet_name):
+            stop_id = (cells.get("H") or "").strip()
             if not stop_id:
                 continue
-            if stop_id not in line_assignments:
-                line_value = (cells.get(("C", "value")) or "").strip()
-                if line_value:
-                    line_assignments[stop_id] = line_value
-            if stop_id not in group_assignments:
-                group_value = (cells.get(("A", "value")) or "").strip()
-                if group_value:
-                    group_assignments[stop_id] = group_value
-
-    line_map: Dict[str, List[str]] = defaultdict(list)
-    for stop_id, label in line_assignments.items():
-        line_map[label].append(stop_id)
-
-    group_map: Dict[str, List[str]] = defaultdict(list)
-    for stop_id, label in group_assignments.items():
-        group_map[label].append(stop_id)
-
+            line_value = (cells.get("C") or "").strip()
+            group_value = (cells.get("A") or "").strip()
+            if line_value:
+                line_map[line_value].append(stop_id)
+            if group_value:
+                group_map[group_value].append(stop_id)
     return dict(line_map), dict(group_map)
 
 
@@ -257,20 +231,12 @@ def load_evo10_row_meta(
     workbook_path: Path, sheet_name: str
 ) -> Dict[int, Dict[str, str]]:
     row_meta: Dict[int, Dict[str, str]] = {}
-    with zipfile.ZipFile(workbook_path) as archive:
-        sheet = _load_sheet(archive, sheet_name)
-        shared = _load_shared_strings(archive)
-        sheet_data = sheet.find("m:sheetData", NS)
-        if sheet_data is None:
-            return row_meta
-
-        for row in sheet_data:
-            row_idx = int(row.attrib.get("r", "0"))
-            cells = _extract_row_cells(row, shared)
+    with WorkbookParser(workbook_path) as parser:
+        for row_idx, cells in parser.iter_rows(sheet_name):
             row_meta[row_idx] = {
-                "route_id": (cells.get(("A", "value")) or "").strip(),
-                "route_number": (cells.get(("C", "value")) or "").strip(),
-                "mode": (cells.get(("E", "value")) or "").strip(),
+                "route_id": (cells.get("A") or "").strip(),
+                "route_number": (cells.get("C") or "").strip(),
+                "mode": (cells.get("E") or "").strip(),
             }
     return row_meta
 
@@ -290,14 +256,16 @@ def evaluate_evo10_spec(
             continue
         value = None
         route_id = meta.get("route_id")
-        route_number = meta.get("route_number")
-        mode = meta.get("mode")
         if route_id:
             value = route_totals.get(route_id)
-        if value is None and route_number:
-            value = route_number_totals.get(route_number)
-        if value is None and mode:
-            value = mode_totals.get(mode)
+        if value is None:
+            route_number = meta.get("route_number")
+            if route_number:
+                value = route_number_totals.get(route_number)
+        if value is None:
+            mode = meta.get("mode")
+            if mode:
+                value = mode_totals.get(mode)
         if value is None:
             continue
         total += value
@@ -305,85 +273,5 @@ def evaluate_evo10_spec(
     return total if has_value else None
 
 
-def _extract_row_cells(
-    row: ET.Element,
-    shared_strings: Sequence[str],
-    include_formulas: bool = False,
-) -> Dict[Tuple[str, str], str]:
-    cells: Dict[Tuple[str, str], str] = {}
-    for cell in row.findall("m:c", NS):
-        column = "".join(ch for ch in cell.attrib.get("r", "") if ch.isalpha()).upper()
-        if not column:
-            continue
-        value = _cell_value(cell, shared_strings)
-        if value is not None:
-            cells[(column, "value")] = value
-        if include_formulas:
-            formula = cell.find("m:f", NS)
-            if formula is not None and formula.text:
-                cells[(column, "formula")] = formula.text
-    return cells
-
-
-def _cell_value(cell: ET.Element, shared_strings: Sequence[str]) -> str | None:
-    cell_type = cell.attrib.get("t")
-    if cell_type == "inlineStr":
-        text_parts = [t.text or "" for t in cell.findall("m:is/m:t", NS)]
-        return "".join(text_parts).strip()
-    value_node = cell.find("m:v", NS)
-    if value_node is None:
-        return None
-    if cell_type == "s":
-        index = int(value_node.text or "0")
-        if 0 <= index < len(shared_strings):
-            return shared_strings[index]
-        return None
-    return value_node.text
-
-
-def _load_shared_strings(archive: zipfile.ZipFile) -> List[str]:
-    try:
-        xml_data = archive.read("xl/sharedStrings.xml")
-    except KeyError:
-        return []
-    root = ET.fromstring(xml_data)
-    return ["".join(t.text or "" for t in si.findall(".//m:t", NS)) for si in root.findall("m:si", NS)]
-
-
-def _load_sheet(archive: zipfile.ZipFile, sheet_name: str) -> ET.Element:
-    workbook = ET.fromstring(archive.read("xl/workbook.xml"))
-    rels = ET.fromstring(archive.read("xl/_rels/workbook.xml.rels"))
-    rel_map = {rel.attrib["Id"]: rel.attrib["Target"] for rel in rels.findall(f"{{{REL_NS}}}Relationship")}
-    for sheet in workbook.findall("m:sheets/m:sheet", NS):
-        if sheet.attrib.get("name") == sheet_name:
-            sheet_rid = sheet.attrib.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id")
-            if sheet_rid:
-                target = rel_map.get(sheet_rid)
-                if target:
-                    return ET.fromstring(archive.read(f"xl/{target}"))
-    raise KeyError(f"Sheet {sheet_name} not found")
-
-
-def to_number(value: str | None) -> float | None:
-    if value is None:
-        return None
-    text = str(value).replace(",", "").strip()
-    if not text:
-        return None
-    try:
-        return float(text)
-    except ValueError:
-        return None
-
-
-def format_number(value: float | None) -> str:
-    if value is None:
-        return ""
-    if abs(value - round(value)) < 1e-9:
-        return str(int(round(value)))
-    return f"{value:.6f}".rstrip("0").rstrip(".")
-
-
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())
-
