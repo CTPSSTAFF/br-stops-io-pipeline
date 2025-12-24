@@ -48,8 +48,8 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--evo10-csv",
         type=Path,
-        default=DEFAULT_EVO10_CSV,
-        help="CSV generated from EvO10.01",
+        default=None,
+        help="CSV generated from EvO10.01 (optional)",
     )
     parser.add_argument(
         "--output",
@@ -71,8 +71,28 @@ def main(argv: Sequence[str] | None = None) -> int:
     need_evo9 = any(spec["source"] == "EvO9.01" for spec in label_specs)
     need_evo10 = any(spec["source"] == "EvO10.01" for spec in label_specs)
 
+    evo9_path = args.evo9_csv
+    if need_evo9 and (evo9_path is None or not evo9_path.exists()):
+        sys.stderr.write(
+            "Warning: EvO9.01 data not provided/found; skipping EvO9.01-derived rows.\n"
+        )
+        label_specs = [spec for spec in label_specs if spec["source"] != "EvO9.01"]
+        need_evo9 = False
+
+    evo10_path = args.evo10_csv
+    if need_evo10 and (evo10_path is None or not evo10_path.exists()):
+        sys.stderr.write(
+            "Warning: EvO10.01 data not provided/found; skipping EvO10.01-derived rows.\n"
+        )
+        label_specs = [spec for spec in label_specs if spec["source"] != "EvO10.01"]
+        need_evo10 = False
+
+    if not label_specs:
+        sys.stderr.write("No rows available to compute after filtering.\n")
+        return 1
+
     if need_evo9:
-        stop_totals = load_totals_by_stop(args.evo9_csv)
+        stop_totals = load_totals_by_stop(evo9_path)
         line_map, group_map = load_stop_mappings(args.calibration_workbook, EVO901_SHEET)
         line_totals = aggregate_by_label(line_map, stop_totals)
         group_totals = aggregate_by_label(group_map, stop_totals)
@@ -82,7 +102,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if need_evo10:
         evo10_meta = load_evo10_row_meta(args.calibration_workbook, EVO1001_SHEET)
-        route_totals, route_number_totals, mode_totals = load_evo10_totals(args.evo10_csv)
+        route_totals, route_number_totals, mode_totals = load_evo10_totals(evo10_path)
     else:
         evo10_meta = {}
         route_totals = {}
