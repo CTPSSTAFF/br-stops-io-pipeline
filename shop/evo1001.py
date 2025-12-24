@@ -215,7 +215,8 @@ def write_csv(path: Path, rows: Sequence[Sequence[object]]) -> None:
 
 
 def parse_template_data(
-    workbook_path: Path, sheet_name: str
+    workbook_path: Path = Path("../calibration/Boston_Regional_STOPS Calibration Report_2050.xlsx"), 
+    sheet_name: str = EV0_SHEET,
 ) -> Tuple[List[Dict[str, str]], Dict[str, float], Tuple[int, int, int]]:
     rows = read_sheet_rows(workbook_path, sheet_name)
     route_rows: List[Dict[str, str]] = []
