@@ -56,11 +56,11 @@ flowchart TD
           - 2.3.1 Districts
           - 2.3.2 Station Groups
       - 2.4 District Map
-      - 2.5 Population & Employment
+      - 2.5 Population & Employment // in fact, at at distirct level
           - 2.5.1 Corridor-Level
           - 2.5.2 Regional-Level
-      - 2.6 Auto Speeds
-      - 2.7 Demand Data
+      - 2.6 Auto Speeds // convert from TDM23 skims
+      - 2.7 Demand Data //
           - 2.7.1 Consistency of Ridership Information
           - 2.7.2 Transit Trip Targets
   - 3.0 Existing Conditions & Calibration Results

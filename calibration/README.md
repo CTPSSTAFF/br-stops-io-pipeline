@@ -75,9 +75,18 @@ Manual edits may be needed for any such changes.
 
 
 
+* `A2_Formatted_Tables.xlsx` is built entirely from the staging workbook `A1_Extracted_Tables.xlsx`
+*  `A2_Formatted_Tables.xlsx` is the refined output linked to the Excel Template file. e.g.
+```
+=IFERROR(VLOOKUP($A8,[A2_Formatted_Tables.xlsx]T_10.01!$A:$O,J$4,FALSE),"")
+```
+* Excel Template contains the Data Fetching logics for 
+
+
 
 	Lookup from Table_numbers to names 
 ========================
+```
   2.04   Station Group Boardings Prior to Adjustment
   2.05   Station Group Boarding Factor for Application to Later Iterations
   4.01   WEEKDAY LINKED TRANSIT TRIPS (All Transit / All Car HH)                  : Scenario 3 Build, all access modes
@@ -103,3 +112,4 @@ Manual edits may be needed for any such changes.
   344.01 WEEKDAY LINKED TRANSIT TRIPS (All Transit / All Car HH)                  : Scenario 1 Existing, PNR access subset
   345.01 WEEKDAY LINKED TRANSIT TRIPS (All Transit / All Car HH)                  : Scenario 1 Existing, all access modes
   349.01 WEEKDAY LINKED TRANSIT TRIPS (All Fixed Guideway / All Car HH)
+```
