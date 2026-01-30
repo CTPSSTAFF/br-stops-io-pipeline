@@ -8,10 +8,12 @@ python shop/evo901.py --column-indices 8 9 10 11 12
 python shop/evosys.py --calibration-workbook "calibration/Boston_Regional_STOPS Calibration Report_2050.xlsx" --evo9-csv evo9_01.csv --evo10-csv evo1001.csv --output evosys_estimates.csv
 
 
-python shop/evo901.py --output ./tmp/evo901.csv
-python shop/evo1001.py --output ./tmp/evo101.csv
+python shop/evo901.py --output ./tmp/evo901.csv --column-indices 8 9 10 11 12
+python shop/evo1001.py --output ./tmp/evo101.csv --column-indices 8 9 10
 python shop/evosys.py --evo9-csv ./tmp/evo901.csv --evo10-csv ./tmp/evo101.csv --output ./tmp/evosys.csv
 
 python shop/evosys.py --evo9-csv ./tmp/evo901.csv  --output ./tmp/evosys_901.csv
 python shop/evosys.py --evo10-csv ./tmp/evo101.csv  --output ./tmp/evosys_1001.csv
+## create 1001 route-level summary by scenrio year(modify the prn URL in script)
+python shop/prn1001.py
 ```
