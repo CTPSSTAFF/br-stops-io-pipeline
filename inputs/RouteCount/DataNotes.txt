@@ -1,9 +1,3 @@
-### 2026-02-05: Note ###
-
-Slight discrepancy exists between aggregated bus count between notebook and python code outputs, though
-the difference is very small and is not considered to impact rounded results.
-
-
 ### Data Note ###
 
 Route Count for 2025 12 16 uses Route Count data provided by Insight.
