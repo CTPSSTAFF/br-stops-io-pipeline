@@ -1,114 +1,111 @@
-from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
+from pathlib import Path
 
-# --- Configuration ---
-INPUT_DIR = Path("./20251216_Raw_RouteCounts")
-OUTPUT_DIR = Path("./20251216_Processed_RouteCounts")
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+def run_cr_processing(input_dir, input_filename, output_dir):
+    """
+    Processes MBTA Commuter Rail ridership data.
+    Filters for Fall 2024, aggregates weekday ridership, and scales to target.
+    """
+    print(f"--- Starting Commuter Rail Processing ---")
+    
+    # Define Paths
+    input_path = Path(input_dir) / input_filename
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
 
-# Note: Using the specific filename from your snippet
-DATA_FILE = INPUT_DIR / "MBTA_Commuter_Rail_Ridership_by_Trip%2C_Season%2C_Route_Line%2C_and_Stop..csv"
+    if not input_path.exists():
+        raise FileNotFoundError(f"File not found: {input_path.resolve()}")
 
-DAY_TYPE = "weekday"
-SEASON_FILTER = "Fall 2024"
-CR_TARGET_SUM = 111_755
+    # Load Data
+    df = pd.read_csv(input_path, low_memory=False)
+    print(f"Loaded {len(df):,} rows and {len(df.columns):,} columns")
 
-# --- Helper Functions ---
-def scale_to_target(df, value_col, target_sum):
-    """Scales a numeric column so its sum matches the target."""
-    current_sum = df[value_col].sum()
-    if current_sum == 0:
-        return df, 0
-    scale_factor = target_sum / current_sum
-    df_scaled = df.copy()
-    df_scaled[value_col] *= scale_factor
-    return df_scaled, scale_factor
+    # Filter for Season
+    SEASON_TARGET = 'Fall 2024'
+    df = df[df['season'] == SEASON_TARGET].copy()
+    print(f"Filtered for {SEASON_TARGET}: {len(df):,} rows remaining")
+    
+    # Save the filtered raw data
+    df.to_csv(output_path / "MBTA_Commuter_Rail_Ridership_Fall2024.csv", index=False)
 
-# --- Main Script ---
+    # Constants
+    CR_TARGET_SUM = 111_755
+    DAY_TYPE = "weekday"
 
-if not DATA_FILE.exists():
-    raise FileNotFoundError(f"File not found: {DATA_FILE.resolve()}")
-
-# 1. Load and Filter
-df = pd.read_csv(DATA_FILE, low_memory=False)
-df = df[df['season'] == SEASON_FILTER].copy()
-print(f"Loaded {len(df):,} rows for {SEASON_FILTER}")
-
-# Export filtered raw data
-df.to_csv(OUTPUT_DIR / "MBTA_Commuter_Rail_Ridership_Fall2024.csv", index=False)
-
-# 2. Aggregate boardings (average_ons)
-agg_boardings = (
-    df.groupby(['route_id', 'day_type_name'], as_index=False)['average_ons']
-    .sum()
-    .rename(columns={'average_ons': 'total_boardings'})
-)
-
-# Filter for Weekday and Sort
-agg_boardings = (
-    agg_boardings
-    .query("day_type_name == @DAY_TYPE")
-    .sort_values(['route_id', 'total_boardings'], ascending=[True, False])
-)
-
-# 3. Scale to Control Totals
-agg_cr_scaled, cr_scale_factor = scale_to_target(
-    agg_boardings, "total_boardings", CR_TARGET_SUM
-)
-
-print(f"Commuter Rail total (raw): {agg_boardings['total_boardings'].sum():,.1f}")
-print(f"Scale factor applied: {cr_scale_factor:.6f}")
-print(f"Scaled sum: {agg_cr_scaled['total_boardings'].sum():,.1f}")
-
-# 4. Save Scaled Results
-agg_cr_scaled.to_csv(
-    OUTPUT_DIR / "agg_commuter_rail_boardings_scaled.csv", 
-    index=False
-)
-
-# 5. Statistics and Share Analysis
-tb = agg_boardings['total_boardings']
-agg_stats = pd.Series({
-    'count': tb.count(),
-    'sum': tb.sum(),
-    'mean': tb.mean(),
-    'median': tb.median(),
-    'std': tb.std(),
-    'min': tb.min(),
-    'max': tb.max()
-})
-print("\nAggregate Statistics (Weekday Raw):")
-print(agg_stats)
-
-# Calculate shares
-per_route = (
-    agg_boardings
-    .groupby('route_id', as_index=False)['total_boardings']
-    .sum()
-    .sort_values('total_boardings', ascending=False)
-)
-
-per_route['pct_share'] = per_route['total_boardings'] / per_route['total_boardings'].sum()
-per_route['cum_share'] = per_route['pct_share'].cumsum()
-
-per_route.to_csv(
-    OUTPUT_DIR / "cr_weekday_boardings_per_route_with_shares.csv", 
-    index=False
-)
-
-# 6. Visualization
-try:
-    plt.figure(figsize=(10, 4))
-    (
-        per_route
-        .set_index('route_id')['total_boardings']
-        .head(20)
-        .plot(kind='bar', color='purple')
+    # Aggregate by route and day_type
+    # Note: Commuter Rail uses 'average_ons' instead of 'boardings'
+    agg_boardings = (
+        df.groupby(['route_id', 'day_type_name'], as_index=False)['average_ons']
+          .sum()
+          .rename(columns={'average_ons': 'total_boardings'})
     )
-    plt.title(f"Top Commuter Rail Routes — {DAY_TYPE} Boardings")
-    plt.ylabel("Total Boardings")
-    plt.tight_layout()
-    plt.show()
-except Exception as e:
-    print(f"Plotting skipped: {e}")
+    
+    # Sort for easier inspection
+    agg_boardings = agg_boardings.sort_values(['route_id', 'total_boardings'], ascending=[True, False])
+
+    # Filter for weekday
+    agg_boardings = agg_boardings[agg_boardings['day_type_name'] == DAY_TYPE].copy()
+    
+    # Save unscaled aggregate
+    agg_boardings.to_csv(output_path / "commuter_rail_route_weekday_boardings_aggregate.csv", index=False)
+
+    # --- Scaling ---
+    total_boardings_sum = agg_boardings['total_boardings'].sum()
+    print(f"Sum of total_boardings (Raw): {total_boardings_sum:,.1f}")
+
+    scale_factor = CR_TARGET_SUM / total_boardings_sum
+    
+    agg_boardings_scaled = agg_boardings.copy()
+    agg_boardings_scaled['total_boardings'] = agg_boardings_scaled['total_boardings'] * scale_factor
+
+    print(f"Scale Factor: {scale_factor:.6f}")
+    print(f"Scaled sum: {agg_boardings_scaled['total_boardings'].sum():,.1f}")
+
+    # Save Scaled Output
+    agg_boardings_scaled.to_csv(output_path / "agg_commuter_rail_boardings_scaled.csv", index=False)
+
+    # --- Stats & Shares ---
+    tb = agg_boardings['total_boardings']
+    agg_stats = pd.Series({
+        'count': tb.count(), 'sum': tb.sum(), 'mean': tb.mean(),
+        'median': tb.median(), 'std': tb.std(), 'min': tb.min(), 'max': tb.max()
+    })
+    print("\nAggregate statistics (Raw Weekday):")
+    print(agg_stats)
+
+    # Re-aggregate by route for shares
+    per_route = (
+        agg_boardings.groupby('route_id', as_index=False)['total_boardings']
+        .sum()
+        .sort_values('total_boardings', ascending=False)
+    )
+
+    print("\nTop 10 routes by weekday total_boardings:")
+    print(per_route.head(10))
+
+    print("\nBottom 10 routes by weekday total_boardings:")
+    print(per_route.tail(10))
+
+    per_route['pct_share'] = per_route['total_boardings'] / per_route['total_boardings'].sum()
+    per_route['cum_share'] = per_route['pct_share'].cumsum()
+    
+    per_route.to_csv(output_path / "weekday_boardings_per_route_with_shares.csv", index=False)
+
+    # # --- Plotting ---
+    # try:
+    #     plot_path = output_path / "top_20_routes_weekday_cr.png"
+    #     (
+    #         per_route.set_index('route_id')['total_boardings']
+    #         .head(20)
+    #         .plot(kind='bar', figsize=(10, 4), title='Top 20 Commuter Rail Routes — Weekday Boardings')
+    #     )
+    #     plt.ylabel('total_boardings')
+    #     plt.tight_layout()
+    #     plt.savefig(plot_path)
+    #     plt.close()
+    #     print(f"\nPlot saved to: {plot_path}")
+    # except Exception as e:
+    #     print(f"Could not generate plot: {e}")
+
+    # print(f"--- Commuter Rail Processing Complete ---\n")

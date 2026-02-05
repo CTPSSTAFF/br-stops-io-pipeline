@@ -1,0 +1,25 @@
+### 2026-02-05: Note ###
+
+Slight discrepancy exists between aggregated bus count between notebook and python code outputs, though
+the difference is very small and is not considered to impact rounded results.
+
+
+### Data Note ###
+
+Route Count for 2025 12 16 uses Route Count data provided by Insight.
+
+The scripts in "Data Processors" were created to come to the same conclusion of Insight.
+- Insight's data was matched for Bus and Commuter Rail
+- - Commuter Rail MBTA Dataset (https://mbta-massdot.opendata.arcgis.com/datasets/9e8089a985f24bc6a1dbae1e69703808_0/explore)
+- - Bus MBTA Dataset (https://gis.data.mass.gov/datasets/8daf4a33925a4df59183f860826d29ee/about)
+- - Additional context found in "Route Count Documentation" : https://docs.google.com/document/d/12u1ZewqG28Un7PQWeBvC9GOWTWwxKhSCV7LVX6mtAGw/
+- Minor differences were found for Regional Agency Boarding counts with the National Transit Database's scaling method indicated by Insight
+- Minor differences were found for Ferry boardings
+- Heavy and Light Rail Data did not use MBTA's open data route boardings but rather uses a different monthly dataset
+- - (https://docs.google.com/spreadsheets/d/1eyboPIVq72FALLALQT5rqU1SFYZ6WFtetSiEde9gzmo/edit?gid=0#gid=0)
+
+Minor difference in numbers were considered to be small in total boarding numbers, indicating that close-boarding values means similar behavior for model.
+
+As mentioned, the RouteCounts.csv used in BRSTOPS 20251216 uses the route count values provided by Insight
+
+The scripts are meant to be used for use for future Model Version Updates (and their respective boarding route count data) wdown the road.\
