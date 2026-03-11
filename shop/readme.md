@@ -28,7 +28,12 @@ python shop/evo901.py --column-indices 8 9 10 11 12
 python shop/evosys.py --calibration-workbook "calibration/Boston_Regional_STOPS Calibration Report_2050.xlsx" --evo9-csv evo9_01.csv --evo10-csv evo1001.csv --output evosys_estimates.csv
 
 
+# 2024 data brought in from prn file + Boston_Regional_STOPS Calibration Report_2050.xlsx format
 python shop/evo901.py --output ./tmp/evo901.csv --column-indices 8 9 10 11 12
+
+# 2024 data, lookup, aggregation logic brought in from prn file
+# Boston_Regional_STOPS Calibration Report_2050.xlsx format brought in
+# Growth rates data originates from  Boston_Regional_STOPS _mbta50_2045_2050_comparison_2024.xlsx
 python shop/evo1001.py --output ./tmp/evo101.csv --column-indices 8 9 10
 python shop/evosys.py --evo9-csv ./tmp/evo901.csv --evo10-csv ./tmp/evo101.csv --output ./tmp/evosys.csv
 

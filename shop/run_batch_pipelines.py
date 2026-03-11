@@ -12,7 +12,7 @@ from pathlib import Path
 # =============================================================================
 # ENVIRONMENT SETUP & PATH FIX (JUPYTER NOTEBOOK SAFE)
 # =============================================================================
-# 1. Dynamically find the project root
+# Dynamically find the project root
 current_dir = Path(os.getcwd()).resolve()
 if current_dir.name == "stops_data_parse":
     PROJECT_ROOT = current_dir.parent.parent
@@ -23,19 +23,19 @@ else:
 
 SHOP_DIR = PROJECT_ROOT / "shop"
 
-# 2. Reset working directory to project root for relative file paths to work
+# Reset working directory to project root for relative file paths to work
 if os.getcwd() != str(PROJECT_ROOT):
     os.chdir(str(PROJECT_ROOT))
 
-# 3. Inject paths so Python can find the modules
+# Inject paths so Python can find the modules
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 if str(SHOP_DIR) not in sys.path:
     sys.path.insert(0, str(SHOP_DIR))
 
 # --- THE IMPORT FIX ---
-# The pipeline files are hardcoded to look for 'shop.base' instead of 'stops_data_parse.base'.
-# This dynamically maps 'shop.base' to the new location in memory so you don't have to edit the files.
+# Pipeline files are hardcoded to look for 'shop.base' instead of 'stops_data_parse.base'.
+# Dynamically maps 'shop.base' to new location in memory.\
 from stops_data_parse import base
 sys.modules['shop.base'] = base
 # ----------------------
@@ -80,7 +80,7 @@ def run_notebook_pipeline():
         ])
 
         # ---------------------------------------------------------------------
-        # PART 1: 2024 Stop-Level Data
+        # 2024 Stop-Level Data
         # ---------------------------------------------------------------------
         logging.info("Running Part 1: Stop-Level Extraction (tmp/evo901.csv)...")
         evo901.main([
@@ -89,7 +89,7 @@ def run_notebook_pipeline():
         ])
 
         # ---------------------------------------------------------------------
-        # PART 2: 2024 & 2050 Route-Level Data
+        # 2024 & 2050 Route-Level Data
         # ---------------------------------------------------------------------
         logging.info("Running Part 2: Route-Level Extraction (tmp/evo101.csv)...")
         evo1001.main([
