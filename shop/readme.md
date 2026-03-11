@@ -27,16 +27,9 @@ python shop/evo901.py --column-indices 8 9 10 11 12
 # - Calibration file does not have 2050 network so the script replicates the logic defined in the excel file
 python shop/evosys.py --calibration-workbook "calibration/Boston_Regional_STOPS Calibration Report_2050.xlsx" --evo9-csv evo9_01.csv --evo10-csv evo1001.csv --output evosys_estimates.csv
 
-# 1 part
-# - 2024 data brought in from prn file + Boston_Regional_STOPS Calibration Report_2050.xlsx format
+
 python shop/evo901.py --output ./tmp/evo901.csv --column-indices 8 9 10 11 12
-
-# 2 parts
-# - 2024 data brought in from prn file + Boston_Regional_STOPS Calibration Report_2050.xlsx format
-# - - lookup and aggregation logic also brought in
-# - 2050 data brought in from Boston_Regional_STOPS _mbta50_2045_2050_comparison_2024.xlsx
 python shop/evo1001.py --output ./tmp/evo101.csv --column-indices 8 9 10
-
 python shop/evosys.py --evo9-csv ./tmp/evo901.csv --evo10-csv ./tmp/evo101.csv --output ./tmp/evosys.csv
 
 python shop/evosys.py --evo9-csv ./tmp/evo901.csv  --output ./tmp/evosys_901.csv
