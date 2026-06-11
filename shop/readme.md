@@ -1,8 +1,28 @@
 # Shop Pipeline Guide
 
-![Shop data flow](docs/dataflowchart.svg)
+*For future reference, the latest version of this guide, along with the source data and low-level parsing modules, are maintained within the `shop/` directory and its subfolder `shop/stops_data_parse/`.*
 
-If the preview drops labels, open `shop/docs/dataflowchart.svg` directly in a browser. The SVG is a draw.io export and still contains the embedded diagram source.
+## Table of Contents
+* [What this folder is for](#what-this-folder-is-for)
+* [Current layout](#current-layout)
+* [Step-by-Step Guide](#step-by-step-guide)
+* [Data Flow](#data-flow)
+* [What Each Step Means and Why We Do It](#what-each-step-means-and-why-we-do-it)
+* [Preferred way to run it](#preferred-way-to-run-it)
+* [Important behavior after the merge](#important-behavior-after-the-merge)
+  * [Low-level parser scripts are not standalone right now](#low-level-parser-scripts-are-not-standalone-right-now)
+  * [The batch runner has two notable gotchas](#the-batch-runner-has-two-notable-gotchas)
+* [What the batch runner actually does](#what-the-batch-runner-actually-does)
+* [What each parser does](#what-each-parser-does)
+* [How to edit this in the future](#how-to-edit-this-in-the-future)
+  * [If you want the current pipeline to be easier to run](#if-you-want-the-current-pipeline-to-be-easier-to-run)
+  * [If workbook layouts change](#if-workbook-layouts-change)
+  * [If the PRN format changes](#if-the-prn-format-changes)
+  * [If you want to keep both route-level outputs](#if-you-want-to-keep-both-route-level-outputs)
+  * [If you want the 2050 system summary to be self-contained](#if-you-want-the-2050-system-summary-to-be-self-contained)
+* [About the flowchart](#about-the-flowchart)
+
+---
 
 ## What this folder is for
 
@@ -34,6 +54,39 @@ The merged code now has two layers:
 | `shop/stops_data_parse/evosys.py` | System-level aggregator driven by `EvOSys` formulas |
 | `shop/stops_data_parse/prn1001.py` | Route-level parser that reads Table `10.01` from a raw STOPS `.prn` |
 | `shop/docs/dataflowchart.svg` | Visual flowchart |
+
+## Data Flow
+The following diagram illustrates the data flow of the input data and the processing logic for the processed files.
+
+![Shop data flow](docs/dataflowchart.svg)
+
+If the preview drops labels, open `shop/docs/dataflowchart.svg` directly in a browser. The SVG is a draw.io export and still contains the embedded diagram source.
+
+## Step-by-Step Guide
+
+To successfully execute the data extraction and aggregation pipeline, follow these steps:
+
+1. **Prepare your environment:** Ensure you are in the repository root and that your input files (`Boston_Regional_STOPS Calibration Report_2050.xlsx`, raw STOPS `.prn` files, and `evo9_01.csv` / `evo10_01.csv` for the 2050 summary) are in their expected directories.
+2. **Run the batch pipeline:** Execute the orchestrator script by running `python shop/run_batch_pipelines.py` in your terminal.
+3. **Baseline Route Extract (`evo1001`):** The script automatically extracts baseline route-level data to `tmp/nb_evo10.csv`.
+4. **2050 System Summary (`evosys`):** The script aggregates a 2050 system summary based on root-level CSVs (if they exist).
+5. **Stop-Level Extract (`evo901`):** The script builds the stop-level CSV into `tmp/evo901.csv`.
+6. **Secondary Route Extract (`evo1001`):** The script runs a secondary route-level extract into `tmp/evo101.csv`.
+7. **Combined & Isolated Summaries (`evosys`):** The script runs three system summaries in sequence: a combined summary, a stop-only summary, and a route-only summary.
+8. **PRN Route Summary (`prn1001`):** Finally, the script parses the raw STOPS `.prn` file and writes to `tmp/evo101.csv`.
+9. **Review Outputs:** Check the `tmp/` directory for your generated `.csv` files. Note that the final step currently overwrites the output from Step 6.
+
+## What Each Step Means and Why We Do It
+
+* **Step 1 (Environment Preparation):** Sets up the necessary conditions so the scripts can find their workbook targets and dependencies without failing.
+* **Step 2 (Batch Orchestrator):** We use a single runner (`run_batch_pipelines.py`) because the low-level modules require runtime path manipulation (compatibility shims) to function correctly after recent folder merges.
+* **Step 3 (Baseline Route Extract):** Pulls observed and estimated totals at the route level to create a baseline point of comparison for other summaries.
+* **Step 4 (2050 System Summary):** We run this early to validate 2050 projections, but it explicitly relies on pre-existing root-level `evo9_01.csv` and `evo10_01.csv` files to function. 
+* **Step 5 (Stop-Level Extract):** Translates workbook formulas into a clean CSV format for stop-level ridership, making granular station-by-station data easier to inspect and reuse.
+* **Step 6 (Secondary Route Extract):** Creates a specific route-level dataset required as a strict input for the subsequent combined system summary. 
+* **Step 7 (Combined & Isolated Summaries):** We run three different `evosys` passes to provide varying aggregation levels (combined, stop-only, route-only) so analysts can view the system metrics from multiple analytical perspectives without manual Excel filtering.
+* **Step 8 (PRN Route Summary):** Bypasses the Excel workbooks entirely to parse Table 10.01 directly from the raw STOPS output, enriching it with agency and mode metadata. We do this to validate the workbook logic against the raw model outputs.
+* **Step 9 (Review):** Verifying the outputs ensures the pipeline ran as expected. A known operational quirk is that Step 8 overwrites Step 6, which you must be aware of if you need the intermediate route-level data.
 
 ## Preferred way to run it
 
